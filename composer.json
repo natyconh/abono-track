@@ -1,0 +1,12 @@
+{
+    "name": "administrador/gestion_agricola_mvc",
+    "authors": [
+        {
+            "name": "Cristian Antonio Manzano Ayala",
+            "email": "cmanzanoayala@gmail.com"
+        }
+    ],
+    "require": {
+        "phpoffice/phpspreadsheet": "^5.3"
+    }
+}

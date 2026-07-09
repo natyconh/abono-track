@@ -1,0 +1,773 @@
+/* public/css/style.css */
+/* RYZOMA: Brand Guidelines Implementation v1.3 (FINAL FUSION) */
+/* Estrategia: Header "Clean Canvas" (Texto) + Sidebar Agro + Cards Restauradas */
+
+/* 1. Importación de Tipografías */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Manrope:wght@400;600;700;800&display=swap');
+
+/* 2. Sistema de Color (Variables Semánticas) */
+:root {
+    /* --- Paleta Base (Ryzoma Umbrella) --- */
+    --ryzoma-charcoal: #313131;  /* Gris Carbón (Texto principal) */
+    --ryzoma-beige:    #F9F9F7;  /* Beige Suave (Fondo Body) */
+    --ryzoma-yellow:   #FFC759;  /* Caléndula (Acento, Botones, Y) */
+    --ryzoma-white:    #FFFFFF;  /* Blanco Puro */
+    --ryzoma-grey-mid: #E0E0E0;  /* Bordes */
+    --ryzoma-grey-light:#F5F5F5; /* Fondos secundarios */
+
+    /* --- Paleta Verticales (Módulos) --- */
+    --vertical-agro:   #0f8164;  /* Verde Bosque (Sidebar Agro) */
+    --vertical-water:  #7EC4CF;  /* Azul Cielo (Riego/Agua) */
+    --vertical-alert:  #F4511E;  /* Naranja Alerta */
+    --vertical-pale:   #e8f5e9;  /* Verde Muy Pálido (Banner) */
+
+    /* --- Mapeo UI --- */
+    --color-bg-body:       var(--ryzoma-beige);
+    --color-text-main:     var(--ryzoma-charcoal);
+    --color-navbar-bg:     var(--ryzoma-white);    /* Header CLARO (Clean Canvas) */
+    --color-sidebar-bg:    var(--vertical-agro);   /* Sidebar VERDE */
+    --color-primary-cta:   var(--ryzoma-yellow);
+}
+
+/* 3. Estilos Globales */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--color-bg-body);
+    color: var(--color-text-main);
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6, .brand-font {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ryzoma-charcoal);
+}
+
+a { text-decoration: none; transition: all 0.2s ease; }
+
+/* ------------------------------------------------------- */
+/* 4. Header de Navegación ("Clean Canvas" - TEXTO)        */
+/* ------------------------------------------------------- */
+.navbar {
+    background-color: var(--color-navbar-bg) !important;
+    border-bottom: 1px solid var(--ryzoma-grey-mid);
+    box-shadow: 0 2px 15px rgba(0,0,0,0.03); /* Sombra ultra suave */
+    padding-top: 0.8rem;
+    padding-bottom: 0.8rem;
+}
+
+/* Logo Textual (Estilo Ryzoma) */
+.navbar-brand {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800; /* Extra Bold */
+    font-size: 1.6rem;
+    color: var(--ryzoma-charcoal) !important;
+    letter-spacing: -0.03em;
+    display: flex;
+    align-items: center;
+}
+
+/* La "Y" estilizada en el texto */
+.navbar-brand .brand-y {
+    color: var(--ryzoma-yellow); /* Conecta visualmente con el Sidebar */
+    font-style: normal; /* Evitar itálica automática */
+}
+
+/* Elementos del Navbar (Usuario, Menú) */
+.navbar .nav-link {
+    color: var(--ryzoma-charcoal) !important;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.navbar .nav-link:hover {
+    color: var(--vertical-agro) !important;
+}
+
+/* Fix Botón Hamburguesa (Visible y Corporativo) */
+.navbar-toggler {
+    /* Usamos el verde agro para el borde, para que se defina bien */
+    border-color: var(--vertical-agro) !important;
+    border-width: 1px;
+    padding: 0.25rem 0.5rem;
+}
+
+.navbar-toggler:focus {
+    box-shadow: none !important; /* Elimina el resplandor azul estándar */
+    background-color: rgba(15, 129, 100, 0.05); /* Sutil fondo verde al tocar */
+}
+
+.navbar-toggler-icon {
+    /* SVG Re-coloreado: El código '%230f8164' corresponde a tu Verde Agro (#0f8164) */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%230f8164' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+}
+/* 5. Sidebar (Contexto Agro - VERDE) */
+#sidebar {
+    background-color: var(--color-sidebar-bg) !important;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.05);
+}
+
+#sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.8);
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    padding: 0.8rem 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 0.2rem;
+    display: flex;
+    align-items: center;
+}
+
+#sidebar .nav-link i {
+    width: 24px;
+    text-align: center;
+    margin-right: 12px;
+    font-size: 1.1rem;
+}
+
+#sidebar .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    transform: translateX(4px);
+}
+
+#sidebar .nav-link.active {
+    background-color: var(--ryzoma-yellow);
+    color: var(--ryzoma-charcoal);
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+#sidebar .nav-link.active i {
+    color: var(--ryzoma-charcoal);
+}
+
+/* 6. Componentes UI (Botones, Banners, Login) */
+
+/* Banner de Bienvenida */
+.welcome-banner {
+    background: linear-gradient(135deg, #ffffff 0%, var(--vertical-pale) 100%);
+    border: 1px solid rgba(15, 129, 100, 0.1);
+    color: var(--vertical-agro);
+    border-radius: 1rem;
+}
+.welcome-banner .stat-icon {
+    color: var(--vertical-agro);
+    opacity: 0.15;
+}
+
+/* Botones */
+.btn-accent-calendula {
+    background-color: var(--color-primary-cta);
+    border-color: var(--color-primary-cta);
+    color: var(--ryzoma-charcoal);
+    font-weight: 700;
+    font-family: 'Manrope', sans-serif;
+    padding: 0.5rem 1.2rem;
+}
+.btn-accent-calendula:hover {
+    background-color: #e6b24e;
+    border-color: #e6b24e;
+    color: var(--ryzoma-charcoal);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.btn-outline-secondary {
+    color: var(--ryzoma-charcoal);
+    border-color: var(--ryzoma-grey-mid);
+}
+.btn-outline-secondary:hover {
+    background-color: var(--ryzoma-grey-light);
+    border-color: var(--ryzoma-charcoal);
+    color: var(--ryzoma-charcoal);
+}
+
+/* Tarjetas Genéricas (Contenedores) */
+.card {
+    border: 1px solid rgba(0,0,0,0.04);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+    border-radius: 0.75rem;
+    background-color: var(--ryzoma-white);
+}
+.card-header {
+    background-color: transparent;
+    border-bottom: 1px solid var(--ryzoma-grey-mid);
+    font-family: 'Manrope', sans-serif;
+    font-weight: 600;
+}
+
+/* Breadcrumbs */
+.breadcrumb-item a {
+    color: var(--vertical-agro);
+    font-weight: 600;
+}
+.breadcrumb-item.active {
+    color: #999;
+    font-weight: 400;
+}
+
+/* --- AJUSTES ESPECÍFICOS LOGIN --- */
+
+/* Logo Ryzoma Gigante en Login */
+.login-brand {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800; /* Extra Bold */
+    font-size: 3.5rem; /* Tamaño impactante */
+    color: var(--ryzoma-white); /* Blanco puro sobre fondo oscuro */
+    letter-spacing: -0.04em;
+    line-height: 1;
+}
+
+/* La Y en Amarillo (Hereda la variable global, funciona perfecto sobre oscuro) */
+.login-brand .brand-y {
+    color: var(--ryzoma-yellow);
+}
+
+/* Ajuste para espaciado de letras (tracking) en subtítulos */
+.ls-2 { letter-spacing: 2px; }
+
+/* Ajuste fino inputs login */
+.login-card-glass .form-control {
+    background-color: rgba(0, 0, 0, 0.2); /* Un poco más oscuro para legibilidad */
+    border-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+.login-card-glass .form-control:focus {
+    background-color: rgba(0, 0, 0, 0.3);
+    border-color: var(--ryzoma-yellow);
+    box-shadow: 0 0 0 4px rgba(255, 199, 89, 0.15); /* Glow amarillo suave */
+}
+.login-card-glass label {
+    color: rgba(255, 255, 255, 0.6);
+}
+/* Placeholder color fix para navegadores */
+.login-card-glass .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+/* --- AJUSTES LOGIN (ISOTIPO CIRCULAR) --- */
+
+/* El contenedor circular blanco */
+.logo-circle {
+    width: 100px;  /* Tamaño similar al de tu imagen */
+    height: 100px;
+    background-color: var(--ryzoma-white); /* Fondo blanco puro */
+    border-radius: 50%; /* Círculo perfecto */
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2); /* Sombra para que flote */
+    position: relative;
+}
+
+/* La "Y" dentro del círculo */
+.brand-y-iso {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+    font-size: 5rem; /* Letra grande */
+    color: var(--ryzoma-yellow); /* Amarillo Ryzoma */
+    line-height: 2;
+    padding-bottom: 1.5rem; /* Ajuste fino vertical */
+}
+
+/* El texto "ryzoma" debajo del círculo */
+.site-name {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+    font-size: 2rem;
+    color: var(--ryzoma-charcoal); /* Blanco sobre el fondo oscuro */
+    letter-spacing: -0.03em;
+}
+
+/* ------------------------------------------------------- */
+/* 7. Clases de Utilidad (RESTAURADAS PARA TARJETAS)       */
+/* ------------------------------------------------------- */
+
+/* Agro (Verde) */
+.text-primary-dark-green { color: var(--vertical-agro) !important; }
+.bg-primary-dark-green   { background-color: var(--vertical-agro) !important; }
+
+/* Agua/Riego (Azul) */
+.bg-accent-sky-blue { background-color: var(--vertical-water) !important; color: #fff; }
+.text-accent-sky-blue { color: var(--vertical-water) !important; }
+
+/* Caléndula (Amarillo) */
+.bg-accent-calendula { background-color: var(--ryzoma-yellow) !important; color: var(--ryzoma-charcoal) !important; }
+
+/* ------------------------------------------------------- */
+/* 8. Tarjetas de Dashboard y Animaciones (CRUCIALES)      */
+/* ------------------------------------------------------- */
+
+/* Stat Cards (KPIs) - Estilo Solarpunk */
+.stat-card {
+    border: none;
+    border-radius: 1rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    /* Importante: Estas tarjetas dependen de las clases de utilidad (bg-...) para el color */
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.12);
+}
+
+.stat-card .stat-icon {
+    font-size: 4.5rem;
+    opacity: 0.2;
+    position: absolute;
+    right: -25px;
+    bottom: -25px;
+    transform: rotate(-15deg);
+}
+
+.stat-card .stat-number {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+    font-size: 2.5rem;
+    letter-spacing: -0.03em;
+}
+
+.stat-card .stat-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Action Cards (Botones/Links gigantes) */
+.action-card {
+    transition: all 0.3s ease;
+    border: 1px solid var(--ryzoma-grey-mid);
+    background-color: var(--ryzoma-white); 
+    height: 100%; /* Asegura altura consistente en grillas */
+}
+
+.action-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--vertical-water); /* Glow azul al hover */
+    box-shadow: 0 10px 25px rgba(126, 196, 207, 0.2);
+}
+
+.action-card .action-icon {
+    font-size: 3rem;
+    color: var(--vertical-agro); /* Icono verde por defecto */
+    transition: transform 0.3s ease;
+}
+
+.action-card:hover .action-icon {
+    transform: scale(1.1);
+}
+
+/* Animaciones Fade-in */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.fade-in-section {
+    animation: fadeIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Responsive Sidebar */
+@media (max-width: 991.98px) {
+    #sidebar {
+        position: fixed; top: 65px; bottom: 0; left: 0;
+        z-index: 1040; width: 240px !important;
+        transform: translateX(-100%);
+        /* FIX DE SCROLL - AGREGADO POR AGRIGROWTH */
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    #sidebar.active { transform: translateX(0); }
+    .sidebar-overlay { 
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+        background: rgba(49,49,49,0.6); z-index: 1030; backdrop-filter: blur(3px);
+    }
+}
+@media (min-width: 992px) {
+    #sidebar .position-sticky { top: 1.5rem; }
+}
+/* Ajuste para la Tarjeta de Bienvenida en Móvil */
+@media (max-width: 768px) {
+    .welcome-banner {
+        background: var(--ryzoma-white); /* Fondo plano en móvil para ahorrar recursos */
+        border-left: 4px solid var(--vertical-agro); /* Acento lateral en vez de fondo completo */
+    }
+    .welcome-banner h2 {
+        font-size: 1.5rem; /* Texto más pequeño */
+    }
+}
+
+/* --- 1. Estilo de Lista Ryzoma --- */
+    /* Quitamos el azul y bordes default */
+    #lista-puntos .list-group-item {
+        border: none;
+        border-bottom: 1px solid var(--ryzoma-grey-mid, #e0e0e0);
+        margin-bottom: 0;
+        transition: all 0.2s ease;
+        padding: 1rem;
+        background-color: #fff;
+    }
+
+    /* Estado ACTIVO: Fondo sutil + Borde Caléndula + Texto Oscuro */
+    #lista-puntos .list-group-item.active {
+        background-color: #FFF8E1 !important; /* Un amarillo muy pálido, casi blanco */
+        border-left: 5px solid var(--ryzoma-yellow, #FFC759) !important; /* Borde grueso */
+        border-color: transparent transparent var(--ryzoma-grey-mid) var(--ryzoma-yellow);
+        color: var(--ryzoma-charcoal, #313131) !important; /* MANTENER TEXTO OSCURO */
+        z-index: 2;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    
+    /* Hover suave */
+    #lista-puntos .list-group-item:hover:not(.active) {
+        background-color: var(--ryzoma-grey-light, #f8f9fa);
+        border-left: 5px solid var(--ryzoma-grey-mid, #ccc); /* Indicador visual de "clickable" */
+    }
+
+    /* Ajuste de los botones dentro del item activo para que destaquen */
+    #lista-puntos .list-group-item.active .btn-outline-primary {
+        background-color: #fff;
+        border-color: var(--vertical-water, #0d6efd);
+        color: var(--vertical-water, #0d6efd);
+    }
+    #lista-puntos .list-group-item.active .btn-outline-secondary {
+        background-color: #fff;
+    }
+
+    /* --- 2. Mejora de Badges (Píldoras modernas) --- */
+    .badge-modern {
+        border-radius: 50rem !important; /* Pill shape */
+        font-weight: 600;
+        padding: 0.35em 0.8em;
+        letter-spacing: 0.03em;
+    }
+
+    /* --- 3. Mapa Responsivo --- */
+    /* En escritorio, altura fija. En móvil, altura relativa para ver mapa y lista */
+    #map-container {
+        height: 600px; /* Altura para PC */
+        width: 100%;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    @media (max-width: 991.98px) {
+        #map-container {
+            height: 50vh; /* Ocupa la mitad de la pantalla en móvil */
+            margin-bottom: 1rem;
+        }
+        /* Ajustamos la lista para que fluya debajo */
+        #lista-contenedor {
+            max-height: 40vh !important; /* Scroll independiente en la parte inferior */
+        }
+    }
+/* --- 4. Optimizaciones Móviles del Mapa (Ryzoma 2.0 - FIX FINAL) --- */
+
+/* Wrapper relativo */
+.position-relative {
+    position: relative !important;
+}
+
+/* Estilo Base Botones Flotantes (FAB) */
+.btn-fab-map {
+    position: absolute;
+    z-index: 1000; /* Encima del mapa */
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.btn-fab-map:active {
+    transform: scale(0.95);
+}
+
+.btn-fab-map i {
+    font-size: 1.4rem;
+}
+
+/* --- COLORES Y POSICIÓN (IZQUIERDA) --- */
+
+/* 1. Botón FILTROS (Arriba Izquierda) */
+/* Color: Usamos blanco o el verde agro para que combine. 
+   Elección: Blanco con icono verde para que parezca control de mapa */
+.btn-fab-filter {
+    top: 70px; /* Bajamos 70px para NO tapar el botón "Mapa/Satélite" de Google */
+    left: 10px; /* Lado Izquierdo */
+    background-color: var(--ryzoma-white);
+    color: var(--vertical-agro); /* Icono Verde Agro */
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* 2. Botón AGREGAR (Abajo Izquierda) */
+/* Color: Amarillo Caléndula (Acción Principal) */
+.btn-fab-add {
+    bottom: 25px; /* Margen inferior */
+    left: 10px;   /* Lado Izquierdo */
+    background-color: var(--ryzoma-yellow);
+    color: var(--ryzoma-charcoal);
+}
+
+/* --- 5. Unificación de Interfaz Móvil (Ryzoma Final) --- */
+
+@media (max-width: 991.98px) {
+    
+    /* 1. TÉCNICA "BREAKOUT": 
+       Hace que los elementos ignoren el padding de Bootstrap y toquen los bordes */
+    #map-container,
+    .full-width-mobile {
+        width: 100vw; /* Ancho total de pantalla */
+        margin-left: calc(-50vw + 50%); /* Centrar a la fuerza a la izquierda */
+        margin-right: calc(-50vw + 50%); /* Centrar a la fuerza a la derecha */
+        border-radius: 0 !important; /* Bordes rectos */
+        box-shadow: none !important; /* Sin sombras laterales */
+    }
+
+    /* 2. Ajustes específicos para la Lista en Móvil */
+    .full-width-mobile {
+        border-top: 1px solid var(--ryzoma-grey-mid); /* Separador sutil con el mapa */
+        margin-top: 0; /* Pegado al mapa */
+        min-height: 50vh; /* Asegura que la lista tenga presencia */
+    }
+
+    /* 3. Ajuste visual del Header de la Lista */
+    .full-width-mobile .card-header {
+        padding-left: 1.5rem; /* Padding interno para que el texto respire */
+        padding-right: 1.5rem;
+        background-color: var(--ryzoma-beige); /* Fondo sutilmente diferente al blanco puro */
+    }
+    
+    .full-width-mobile .list-group-item {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+
+    /* 4. Ajustes finos al Encabezado Superior (Títulos) */
+    /* Esto ayuda a que el título no se sienta "desconectado" del mapa */
+    h3 {
+        font-size: 1.5rem; /* Un poco más compacto en móvil */
+    }
+
+    /* Ajuste para que los botones no queden pegados al borde físico del teléfono si la pantalla es curva */
+    .btn-fab-map {
+        left: 15px; 
+    }
+}
+
+/* --- OPCIÓN 1: Header Compacto --- */
+@media (max-width: 991.98px) {
+    .map-mobile-header {
+        background-color: var(--ryzoma-white);
+        border-bottom: 2px solid var(--ryzoma-grey-mid);
+        position: sticky;
+        top: 56px; /* Altura del navbar */
+        z-index: 1020;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    
+    .map-mobile-header .badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+}
+/* --- AJUSTES GENERALES MÓVIL (Aplicables a todas las opciones) --- */
+@media (max-width: 991.98px) {
+    
+    /* Eliminar padding superior innecesario */
+    .container-fluid.mt-3.mt-lg-4 {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+    
+    /* Mapa ocupa más espacio vertical */
+    #map-container {
+        height: 55vh; /* Un poco más alto */
+        margin-bottom: 0; /* Sin gap con la lista */
+    }
+    
+    /* Lista más compacta */
+    .full-width-mobile .card-header {
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+    }
+    
+    #lista-contenedor {
+        max-height: 45vh !important;
+    }
+    
+    /* Botones FAB más pequeños para no estorbar */
+    .btn-fab-map {
+        width: 45px;
+        height: 45px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+    
+    .btn-fab-map i {
+        font-size: 1.2rem;
+    }
+    
+    /* Ajuste fino del botón de filtros para que no tape controles de Google Maps */
+    .btn-fab-filter {
+        top: 65px; /* Asegura que esté debajo del selector Mapa/Satélite */
+    }
+    
+    /* Reducir padding de items de lista en móvil */
+    .full-width-mobile .list-group-item {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    /* Badges más compactos */
+    .full-width-mobile .badge {
+        font-size: 0.7rem;
+        padding: 0.25em 0.5em;
+    }
+    
+    /* Botones de acción más pequeños */
+    .full-width-mobile .btn-sm {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+/* --- OPCIÓN BONUS: Transición suave al cambiar filtros --- */
+@media (max-width: 991.98px) {
+    #lista-puntos {
+        transition: opacity 0.2s ease;
+    }
+    
+    #lista-puntos.loading {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+}
+
+/* --- FIX: Evitar que el mapa "salte" al cargar --- */
+@media (max-width: 991.98px) {
+    #map {
+        min-height: 55vh;
+    }
+}
+
+/* --- MEJORA: Indicador visual de punto seleccionado más obvio --- */
+@media (max-width: 991.98px) {
+    #lista-puntos .list-group-item.active {
+        border-left-width: 8px !important; /* Más grueso en móvil */
+        padding-left: calc(1rem - 3px); /* Compensar el borde más grueso */
+    }
+}
+
+/* --- ACCESIBILIDAD: Áreas táctiles más grandes --- */
+@media (max-width: 991.98px) and (hover: none) {
+    /* Detecta dispositivos táctiles */
+    .btn-fab-map {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .map-sticky-tabs .nav-link {
+        padding: 1rem 0.5rem;
+    }
+}
+/* ------------------------------------------------------- */
+/* 9. Central de Reportes (Rediseño 2026)                  */
+/* ------------------------------------------------------- */
+
+/* Tarjeta Base Unificada */
+.ryzoma-card {
+    background: var(--ryzoma-white);
+    border: 1px solid rgba(0,0,0,0.08); /* Borde sutil */
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.ryzoma-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+    border-color: rgba(15, 129, 100, 0.3); /* Verde Ryzoma sutil */
+}
+
+/* Hero Card (Eficiencia Hídrica) */
+.hero-card {
+    background: linear-gradient(135deg, var(--vertical-agro) 0%, #095c47 100%);
+    color: var(--ryzoma-white);
+    border: none;
+}
+.hero-card .badge-hero {
+    background-color: rgba(255,255,255,0.2);
+    color: var(--ryzoma-white);
+    backdrop-filter: blur(4px);
+}
+.hero-btn {
+    background: var(--ryzoma-yellow);
+    color: var(--ryzoma-charcoal);
+    font-weight: 700;
+    border: none;
+    transition: all 0.2s;
+}
+.hero-btn:hover {
+    background: #fff;
+    transform: scale(1.02);
+}
+
+/* Icon Boxes Temáticos */
+.card-icon-box {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    margin-bottom: 1.2rem;
+    transition: background 0.3s ease;
+}
+
+/* Temas de Color (Usando tus variables donde es posible) */
+/* Riego (Agua) */
+.theme-water { background: #e6f2ef; color: var(--vertical-agro); }
+
+/* Nutrición (Verde Oliva/Lima - Nuevo para diferenciar del sidebar) */
+.theme-nutri { background: #f4f8e6; color: #7cb342; } 
+
+/* Cosecha (Amarillo/Cálido) */
+.theme-harvest { background: #fff8e1; color: #f59e0b; }
+
+/* Análisis/Datos (Gris Neutro) */
+.theme-analisis { background: var(--ryzoma-grey-light); color: var(--ryzoma-charcoal); }
+
+/* Tipografía en Tarjetas */
+.ryzoma-card h5, .ryzoma-card h6 {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    color: var(--ryzoma-charcoal);
+}
+.ryzoma-card p {
+    font-family: 'Inter', sans-serif;
+    color: #666;
+    line-height: 1.5;
+}
+
+/* Link de acción inferior */
+.card-action-link {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    margin-top: auto; /* Empuja el link al fondo */
+}

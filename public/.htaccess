@@ -1,0 +1,19 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # --- ¡ESTA ES LA LÍNEA CLAVE QUE FALTABA! ---
+    # Indica a Apache que este .htaccess opera dentro de un subdirectorio.
+    # Asegúrate de que coincida con la ruta de tu carpeta public.
+    RewriteBase /gestion_agricola_mvc/public/
+    # ----------------------------------------------
+
+    # Redirige si la solicitud NO es un archivo existente
+    RewriteCond %{REQUEST_FILENAME} !-f
+    # Redirige si la solicitud NO es un directorio existente
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Redirige todas las demás solicitudes a index.php
+    # (El RewriteBase anterior se encarga de la ruta)
+    RewriteRule ^(.*)$ index.php?url=$1 [L,QSA]
+</IfModule>
+
