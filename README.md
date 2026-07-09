@@ -1,148 +1,103 @@
-# 🌱 Ryzoma Agro — Módulo de Fertirrigación (Showcase)
+# 🌱 Abono Track
 
-> **Aviso:** Este repositorio es un *showcase* técnico extraído del sistema privado **Ryzoma Agro**. Contiene el schema de base de datos sanitizado y una descripción detallada de la arquitectura y lógica de negocio del módulo de fertirrigación, con el propósito de demostrar criterio de diseño, calidad de código y resolución de problemas técnicos complejos.
+**Abono Track** es una plataforma web orientada a la gestión y trazabilidad de programas de fertilización agrícola. El sistema permite registrar fertilizantes, configurar distribuciones de riego, calcular aportes nutricionales NPK y generar reportes para apoyar la toma de decisiones en predios agrícolas.
 
-## 📝 Contexto del Proyecto
+Este repositorio corresponde a una versión académica desarrollada para el proyecto final del ramo **Taller de Proyecto de Especialidad**.
 
-**Ryzoma Agro** es una plataforma SaaS *multi-tenant* diseñada para la gestión operativa y gerencial del sector agrícola. El sistema procesa y cruza datos críticos como fertirriego, condiciones climáticas (ej. evaporación de bandeja), registro y trazabilidad de cosechas, y georreferenciación de eventos en terreno (fugas, plagas, infraestructura).
+## Integrantes
 
-Este *showcase* se enfoca en el **Módulo de Fertirrigación**, que resuelve el problema de inyectar fertilizantes en una red hidráulica real y calcular automáticamente la distribución de nutrientes (N, P, K) hacia cada sector de cultivo.
+- Nathalia
+- Cristian
 
-## 🏗 Stack y Arquitectura
+## Contexto del proyecto
 
-El sistema implementa un patrón **MVC con Capa de Servicios**, manteniendo los controladores delgados y aislando la lógica de negocio compleja en servicios especializados.
+En la agricultura, la gestión de fertilización requiere controlar múltiples variables: productos utilizados, cantidades aplicadas, distribución hacia sectores o predios, y nutrientes aportados al cultivo. Cuando estos registros se realizan de forma manual o dispersa, se dificulta la trazabilidad, el análisis histórico y la generación de reportes confiables.
 
-| Capa | Tecnología |
-|---|---|
-| Backend | PHP 8.x — Arquitectura MVC custom |
-| Base de datos | MySQL 8.0 / InnoDB — Schema normalizado |
-| Lógica de negocio | Capa de Servicios (`FertilizacionService.php`) |
-| Frontend | HTML5, Bootstrap 5, JavaScript Vanilla |
-| Seguridad | Multi-tenancy por `empresa_id`, consultas preparadas con `bindParam` |
+**Abono Track** busca centralizar esta información en una plataforma web que permita registrar y consultar datos de fertilización de manera ordenada, reduciendo errores y facilitando el seguimiento nutricional.
 
-## 🗄 Modelo de Datos
+## Objetivo general
 
-El archivo [`database/schema_sanitized.sql`](./database/schema_sanitized.sql) contiene el schema focalizado en este módulo (12 tablas). El modelo completo del sistema incluye ~35 tablas adicionales de otros módulos.
+Desarrollar una plataforma web para la gestión y trazabilidad de programas de fertilización agrícola, incorporando registro de fertilizantes, cálculo nutricional NPK, historial de aplicaciones y generación de reportes.
 
-### Diagrama de relaciones clave
+## Objetivos específicos
 
-```
-empresas (1) ──────────────────────────────────────────── (*) predios
-    │                                                           │
-    │                                                      (*) sectores
-    │                                                           │
-    └──── (*) fertilizantes                                     │
-    │         (nombre, densidad, %N, %P, %K,                    │
-    │           micronutrientes JSON)                           │
-    │                                                           │
-    └──── (*) config_distribucion_riego ────────────────────────┘
-    │         (predio_origen_id → predio_destino_id, porcentaje_flujo)
-    │
-    └──── (*) fertilizaciones_cabezal ──── (*) fertilizaciones_reales
-              (qué se inyecta en origen)        (qué llega a cada predio)
-```
+- Registrar fertilizantes con sus respectivos aportes nutricionales.
+- Gestionar aplicaciones de fertilización por fecha, predio o sector.
+- Calcular automáticamente unidades nutricionales de N, P y K.
+- Mantener historial de fertilizaciones realizadas.
+- Generar reportes nutricionales para apoyar la toma de decisiones.
+- Organizar la información de forma clara, trazable y consultable.
 
-### Tablas del módulo
+## Funcionalidades principales
 
-| Tabla | Rol |
-|---|---|
-| `empresas` | Tabla raíz del multi-tenancy. Cada cliente es una empresa. |
-| `usuarios` | Usuarios del sistema, aislados por `empresa_id`. |
-| `predios` / `sectores` / `cultivos` | Topología de la red agrícola del cliente. |
-| `fertilizantes` | Catálogo de productos. Maneja % fijos para macros (N,P,K) y una columna JSON para micros impredecibles. Soporta cálculos en Kg o Lt vía densidad. |
-| `config_distribucion_riego` | **Grafo de adyacencia con pesos.** Cada fila define que el `predio_origen_id` distribuye un `porcentaje_flujo` hacia un `predio_destino_id`. Sustenta el algoritmo de *mass balance*. |
-| `fertilizaciones_cabezal` | Registro de lo que se **inyecta** en el cabezal (origen). Contiene columna `semana` generada automáticamente por MySQL (`GENERATED ALWAYS AS`). |
-| `fertilizaciones_reales` | Resultado del **cálculo de distribución**: qué cantidad y cuántas unidades puras (N, P, K) recibió efectivamente cada sector de destino. |
-| `programas_fertilizacion` | Plan nutricional anual por cultivo o predio (lógica `base` + `ajuste`). |
-| `programas_detalles` | Metas mensuales de N, P, K definidas en el programa. Permite comparar planificado vs. ejecutado. |
-| `reportes_tokens` | Tokens con expiración para compartir reportes con terceros sin crear cuentas. |
+### Gestión de fertilizantes
 
-## 🧠 Desafíos Técnicos Resueltos
+Permite registrar y administrar fertilizantes utilizados en el proceso agrícola, incluyendo información nutricional relevante como porcentaje de nitrógeno, fósforo y potasio.
 
-### 1. Modelado Flexible de Datos (Anti-EAV via JSON Nativo)
+### Registro de fertilización
 
-**Problema:** Los fertilizantes y bioestimulantes agrícolas pueden contener combinaciones impredecibles de micronutrientes (Zinc, Boro, Ácidos Húmicos, etc.). Crear columnas estáticas limitaría la escalabilidad, y usar un patrón EAV (Entity-Attribute-Value) tradicional encarecería exponencialmente los JOINs en los reportes de temporada.
+Permite ingresar aplicaciones de fertilización, asociando productos, cantidades, fechas y sectores correspondientes.
 
-**Solución:** Se aprovechó el soporte JSON nativo de MySQL 8.0. La tabla fertilizantes almacena un payload dinámico (ej. {"Zn": 2.5, "B": 1.0}). Durante el cálculo de Mass Balance, el servicio decodifica este JSON, calcula las unidades reales aplicadas según la densidad del producto y la distribución, y lo guarda en la tabla destino como un nuevo objeto JSON de resultados.
+### Cálculo nutricional NPK
 
-### 2. Algoritmo de Distribución Hidráulica (Mass Balance)
+El sistema calcula automáticamente las unidades nutricionales aportadas según la composición del fertilizante y la cantidad aplicada.
 
-**Problema:** El fertilizante se inyecta en un cabezal central, pero la red de cañerías lo distribuye a múltiples sectores con proporciones distintas y variables según la configuración de cada empresa.
+### Configuración de distribución
 
-**Solución:** El método `procesarDistribucion()` en `FertilizacionService`:
+Permite representar cómo se distribuye el riego o fertilización entre distintos predios o sectores, facilitando el cálculo de aportes reales.
 
-1. Lee el grafo de distribución desde `config_distribucion_riego` para el cabezal registrado.
-2. Convierte la cantidad aplicada a **kilos netos de producto** considerando `tipo_unidad` (Kg/Lt) y `densidad` del fertilizante.
-3. Itera sobre cada arco del grafo, aplica `porcentaje_flujo` y calcula el **remanente** que queda en el predio de origen.
-4. Por cada destino, calcula las **unidades puras** de nutrientes: `unidades_n = cantidad_recibida * (porcentaje_n / 100)`.
-5. Persiste los resultados en `fertilizaciones_reales` dentro de una transacción atómica.
+### Historial y reportes
 
-```php
-// Fragmento ilustrativo — FertilizacionService.php
-public function procesarDistribucion(int $cabezalId, int $empresaId): void
-{
-    $distribuciones = $this->configModel->getDistribucion($cabezalId, $empresaId);
-    DB::beginTransaction();
-    foreach ($distribuciones as $dist) {
-        $cantidadRecibida = $cabezal->cantidad_kg * ($dist->porcentaje_flujo / 100);
-        $this->realModel->insertar([
-            'predio_destino_id' => $dist->predio_destino_id,
-            'cantidad_recibida' => $cantidadRecibida,
-            'unidades_n'        => $cantidadRecibida * ($fertilizante->porcentaje_n / 100),
-            'unidades_p'        => $cantidadRecibida * ($fertilizante->porcentaje_p / 100),
-            'unidades_k'        => $cantidadRecibida * ($fertilizante->porcentaje_k / 100),
-        ]);
-    }
-    DB::commit();
-}
-```
+El sistema permite consultar registros históricos y generar reportes nutricionales para revisar aplicaciones realizadas y apoyar el análisis técnico.
 
-### 3. Multi-Tenancy Estricto a Nivel de Modelo
+## Tecnologías utilizadas
 
-**Problema:** Garantizar que los datos de diferentes empresas agrícolas nunca se crucen, incluso ante errores de programación en capas superiores.
+- PHP
+- MySQL
+- HTML5
+- CSS / Bootstrap
+- JavaScript
+- Arquitectura MVC
+- Patrón de servicios para lógica de negocio
 
-**Solución:** El `empresa_id` se inyecta en el constructor de cada modelo y se incluye obligatoriamente en **toda** consulta SQL mediante `bindParam`. No existe ningún método de lectura que no filtre por empresa.
+## Modelo de datos
 
-```php
-// FertilizanteModel.php
-public function __construct(private int $empresaId) {}
+El proyecto utiliza una base de datos relacional en MySQL. El archivo `database/schema_sanitized.sql` contiene la estructura principal utilizada para representar empresas, predios, sectores, fertilizantes, configuraciones de distribución, registros de fertilización y reportes.
 
-public function getAll(): array
-{
-    $stmt = $this->db->prepare(
-        'SELECT * FROM fertilizantes WHERE empresa_id = :empresa AND activo = 1'
-    );
-    $stmt->bindParam(':empresa', $this->empresaId, PDO::PARAM_INT);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-```
+## Arquitectura
 
-### 4. Formularios Dinámicos con Prevención de Duplicados
+El sistema se organiza bajo una arquitectura MVC:
 
-**Problema:** Los operarios de terreno registran mezclas de múltiples fertilizantes en una sola pantalla desde dispositivos móviles, expuestos a doble envío por conectividad inestable.
+- **Models:** administran el acceso a datos.
+- **Views:** presentan las interfaces del usuario.
+- **Controllers:** reciben solicitudes y coordinan el flujo del sistema.
+- **Services:** concentran la lógica de negocio, especialmente los cálculos de fertilización y distribución nutricional.
 
-**Solución:** El método `guardarRegistro()` en `FertilizacionController` procesa arrays dinámicos generados con `<template>` en JavaScript. Antes de cada inserción invoca `verificarDuplicado()` que comprueba la combinación `(empresa_id, predio_cabezal_id, fertilizante_id, fecha)`. Los duplicados se omiten silenciosamente y se reporta un resumen de éxitos/omisiones al usuario.
+## Alcance académico
 
-### 5. Reportes Efímeros para Asesores Externos
+Esta versión tiene fines académicos y demostrativos. El proyecto fue adaptado como una propuesta coherente para la gestión de fertilización agrícola bajo el nombre **Abono Track**.
 
-**Problema:** Gerencia necesita compartir métricas de fertilización (Unidades NPK/Hectárea) con asesores externos sin otorgarles acceso al sistema.
+## Estado del proyecto
 
-**Solución:** `reportes_tokens` almacena un hash criptográfico con fecha de expiración. `generarLinkPublico()` crea una URL de un solo uso que renderiza `reporte_nutricional.php` de forma completamente aislada y optimizada para impresión con CSS `@media print`.
+Proyecto en desarrollo para entrega académica final.
 
-## 📁 Contenido del Repositorio
+## Licencia
 
-```
-ryzoma-agro-showcase/
+Uso académico.
+
+## Estructura del repositorio
+
+```text
+abono-track/
 ├── README.md
 ├── app/
 │   ├── controllers/
 │   │   ├── FertilizacionController.php
 │   │   └── FertilizanteController.php
 │   ├── core/
-│   │   └── FertilizacionService.php       # Lógica de negocio dura y algoritmos
+│   │   └── FertilizacionService.php
 │   ├── models/
-│   │   └── FertilizanteModel.php          # Consultas preparadas y abstracción DB
+│   │   └── FertilizanteModel.php
 │   └── views/
 │       ├── fertilizacion/
 │       │   ├── configuracion.php
@@ -153,12 +108,6 @@ ryzoma-agro-showcase/
 │           ├── form.php
 │           └── index.php
 └── database/
-    └── schema_sanitized.sql               # Schema focalizado (12 tablas, sanitizado)
-```
+    └── schema_sanitized.sql
 
-El código fuente del sistema (controladores, modelos, vistas, servicios) se mantiene en repositorio privado. Este showcase expone la arquitectura, el modelo de datos y la lógica de negocio de forma ilustrativa.
-
-***
-
-*Desarrollado por [Cristian Manzano Ayala](https://github.com/CristianM1337) — Sistema en producción activa.*
 
