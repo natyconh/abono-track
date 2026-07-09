@@ -60,6 +60,33 @@ El sistema permite consultar registros históricos y generar reportes nutriciona
 - Arquitectura MVC
 - Patrón de servicios para lógica de negocio
 
+## Estructura del repositorio
+
+```text
+abono-track/
+├── README.md
+├── app/
+│   ├── controllers/
+│   │   ├── FertilizacionController.php
+│   │   └── FertilizanteController.php
+│   ├── core/
+│   │   └── FertilizacionService.php
+│   ├── models/
+│   │   └── FertilizanteModel.php
+│   └── views/
+│       ├── fertilizacion/
+│       │   ├── configuracion.php
+│       │   ├── historial.php
+│       │   ├── registro.php
+│       │   └── reporte_nutricional.php
+│       └── fertilizantes/
+│           ├── form.php
+│           └── index.php
+└── database/
+    └── schema_sanitized.sql
+
+
+
 ## Modelo de datos
 
 El proyecto utiliza una base de datos relacional en MySQL. El archivo `database/schema_sanitized.sql` contiene la estructura principal utilizada para representar empresas, predios, sectores, fertilizantes, configuraciones de distribución, registros de fertilización y reportes.
@@ -85,29 +112,6 @@ Proyecto en desarrollo para entrega académica final.
 
 Uso académico.
 
-## Estructura del repositorio
 
-```text
-abono-track/
-├── README.md
-├── app/
-│   ├── controllers/
-│   │   ├── FertilizacionController.php
-│   │   └── FertilizanteController.php
-│   ├── core/
-│   │   └── FertilizacionService.php
-│   ├── models/
-│   │   └── FertilizanteModel.php
-│   └── views/
-│       ├── fertilizacion/
-│       │   ├── configuracion.php
-│       │   ├── historial.php
-│       │   ├── registro.php
-│       │   └── reporte_nutricional.php
-│       └── fertilizantes/
-│           ├── form.php
-│           └── index.php
-└── database/
-    └── schema_sanitized.sql
 
 
