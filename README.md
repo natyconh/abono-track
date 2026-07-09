@@ -84,8 +84,7 @@ abono-track/
 │           └── index.php
 └── database/
     └── schema_sanitized.sql
-
-
+```
 
 ## Modelo de datos
 
