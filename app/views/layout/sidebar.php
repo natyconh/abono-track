@@ -111,7 +111,7 @@
 
         <div class="mt-auto pt-4 text-center opacity-50">
             <small class="text-white" style="font-size: 0.7rem;">
-                &copy; <?php echo date('Y'); ?> Ryzoma Agro<br>v0.5.5
+                &copy; <?php echo date('Y'); ?> Abono Track<br>v0.5.5
             </small>
         </div>
     </div>

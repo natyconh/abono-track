@@ -58,14 +58,29 @@ class App {
      * Obtiene la URL del parámetro 'url' (gracias a .htaccess),
      * la limpia y la divide en un array.
      */
-    public function getUrl() {
-        if (isset($_GET['url'])) {
-            $url = rtrim($_GET['url'], '/'); // Quitar / del final
-            $url = filter_var($url, FILTER_SANITIZE_URL); // Limpiar la URL
-            $url = explode('/', $url); // Dividir en array
-            return $url;
-        }
-        return []; // Retorna un array vacío si no hay URL (irá al HomeController@index)
+   public function getUrl() {
+    // Caso 1: URLs tipo ?url=users/login
+    if (isset($_GET['url'])) {
+        $url = rtrim($_GET['url'], '/');
+        $url = filter_var($url, FILTER_SANITIZE_URL);
+        return explode('/', $url);
     }
+
+    // Caso 2: URLs tipo /users/login
+    $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+
+    // Quitar query string, por ejemplo ?algo=1
+    $requestUri = parse_url($requestUri, PHP_URL_PATH);
+
+    // Quitar slash inicial y final
+    $requestUri = trim($requestUri, '/');
+
+    if (!empty($requestUri)) {
+        $requestUri = filter_var($requestUri, FILTER_SANITIZE_URL);
+        return explode('/', $requestUri);
+    }
+
+    return [];
+}
 }
 ?>

@@ -42,7 +42,3 @@ Thumbs.db
 /uploads/
 /storage/
 /cache/
-
-# Archivos legacy o herramientas locales no necesarias en el repositorio académico
-_legacy/
-composer.phar

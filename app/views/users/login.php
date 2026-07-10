@@ -115,6 +115,15 @@ body.login-page::before {
     border-color: #e0a331;
     color: #313131;
 }
+
+.site-name {
+    display: block;
+    color: #ffffff;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-top: 1rem;
+    text-align: center;
+}
     </style>
 </head>
 <body class="login-page"> 
@@ -129,12 +138,11 @@ body.login-page::before {
                 <div class="text-center mb-4">
                             <!-- EL CAMBIO CLAVE: Círculo CSS con la Y -->
                             <div class="logo-circle mx-auto mb-3 d-flex align-items-center justify-content-center">
-                                <span class="brand-y-iso">y</span>
+                                <span class="brand-y-iso">A</span>
                             </div>
                             
                             <!-- Nombre de la Marca (Texto) -->
-                            <span class="site-name">ryzoma</span>
-                <span class="badge bg-light text-secondary ms-2 fw-normal border" style="font-size: 0.6rem; vertical-align: middle;">AGRO</span>
+                            <span class="site-name">Abono Track</span>
                         </div>
 
                     <?php SessionHelper::displayFlash(); ?>

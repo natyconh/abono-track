@@ -1,6 +1,6 @@
 <?php
 // app/views/layout/header.php
-// Header "Clean Canvas" con Logo Tipográfico Ryzoma
+// Header "Clean Canvas" con Logo Tipográfico Abono Track
 // Actualizado: Sidebar extraído a componente separado
 $current_url_path = $_GET['url'] ?? 'home/index';
 ?>
@@ -19,7 +19,7 @@ $current_url_path = $_GET['url'] ?? 'home/index';
     <link rel="stylesheet" href="<?php echo URL_ROOT; ?>/css/style.css?v=3.0">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌱</text></svg>">
     
-    <title><?php echo isset($titulo) ? $titulo . ' - Ryzoma' : 'Ryzoma | Agro'; ?></title>
+   <title><?php echo isset($titulo) ? $titulo . ' - Abono Track' : 'Abono Track'; ?></title>
 </head>
 <body class="bg-light-beige d-flex flex-column min-vh-100">
 
@@ -31,8 +31,7 @@ $current_url_path = $_GET['url'] ?? 'home/index';
             </button>
 
             <a class="navbar-brand" href="<?php echo URL_ROOT; ?>">
-                r<span class="brand-y">y</span>zoma
-                <span class="badge bg-light text-secondary ms-2 fw-normal border" style="font-size: 0.6rem; vertical-align: middle;">AGRO</span>
+                Abono Track
             </a>
             
             <div class="ms-auto dropdown">
