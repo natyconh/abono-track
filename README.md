@@ -63,7 +63,6 @@ El sistema permite consultar registros históricos y generar reportes nutriciona
 ## Estructura del repositorio
 
 ```text
-## Estructura del repositorio
 
 ```text
 abono-track/
