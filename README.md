@@ -127,31 +127,28 @@ abono-track/
 
 La estructura del proyecto sigue una organización basada en arquitectura MVC, separando controladores, modelos, vistas y componentes centrales del sistema. Además, el directorio `public/` concentra los recursos accesibles desde el navegador, como estilos, imágenes, scripts y el punto de entrada principal de la aplicación.
 
+
 ## Modelo de datos
 
-El proyecto utiliza una base de datos relacional en MySQL. El archivo `database/schema_sanitized.sql` contiene la estructura principal utilizada para representar empresas, predios, sectores, fertilizantes, configuraciones de distribución, registros de fertilización y reportes.
+El proyecto utiliza una base de datos relacional en MySQL. El archivo `database/schema_sanitized.sql` contiene la estructura principal del sistema, permitiendo representar entidades como empresas, usuarios, trabajadores, predios, sectores, fertilizantes, configuraciones de distribución, registros de fertilización y reportes.
+
+Este modelo permite organizar la información de forma estructurada, mantener relaciones entre los datos y facilitar la trazabilidad de los programas de fertilización agrícola.
 
 ## Arquitectura
 
-El sistema se organiza bajo una arquitectura MVC:
+El sistema se organiza bajo una arquitectura MVC, separando responsabilidades entre las distintas capas del proyecto:
 
-- **Models:** administran el acceso a datos.
-- **Views:** presentan las interfaces del usuario.
-- **Controllers:** reciben solicitudes y coordinan el flujo del sistema.
-- **Services:** concentran la lógica de negocio, especialmente los cálculos de fertilización y distribución nutricional.
+- **Models:** administran el acceso a datos y las consultas relacionadas con la base de datos.
+- **Views:** presentan las interfaces del usuario, incluyendo formularios, tablas, paneles y reportes.
+- **Controllers:** reciben las solicitudes del usuario y coordinan el flujo entre modelos, vistas y servicios.
+- **Services:** concentran la lógica de negocio, especialmente los cálculos de fertilización, distribución y aportes nutricionales.
+
+Esta estructura permite mantener el código ordenado, facilitar su mantenimiento y separar la lógica de presentación, datos y procesamiento.
 
 ## Alcance académico
 
 Esta versión tiene fines académicos y demostrativos. El proyecto fue adaptado como una propuesta coherente para la gestión de fertilización agrícola bajo el nombre **Abono Track**.
 
-## Estado del proyecto
-
-Proyecto en desarrollo para entrega académica final.
-
 ## Licencia
 
 Uso académico.
-
-
-
-
