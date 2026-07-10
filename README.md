@@ -111,7 +111,6 @@ abono-track/
 ```
 
 La estructura del proyecto sigue una organización basada en arquitectura MVC, separando controladores, modelos, vistas y componentes centrales del sistema. Además, el directorio `public/` concentra los recursos accesibles desde el navegador, como estilos, imágenes, scripts y el punto de entrada principal de la aplicación.
-```
 
 ## Modelo de datos
 
