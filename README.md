@@ -63,6 +63,9 @@ El sistema permite consultar registros históricos y generar reportes nutriciona
 ## Estructura del repositorio
 
 ```text
+## Estructura del repositorio
+
+```text
 abono-track/
 ├── README.md
 ├── .gitignore
@@ -75,12 +78,14 @@ abono-track/
 │   │   ├── FertilizanteController.php
 │   │   ├── PrediosController.php
 │   │   ├── SectoresController.php
+│   │   ├── TrabajadoresController.php
 │   │   └── UsersController.php
 │   ├── core/
 │   │   ├── App.php
 │   │   ├── Controller.php
 │   │   ├── FertilizacionService.php
-│   │   └── SessionHelper.php
+│   │   ├── SessionHelper.php
+│   │   └── StorageService.php
 │   ├── models/
 │   │   ├── FertilizanteModel.php
 │   │   ├── PredioModel.php
@@ -91,6 +96,7 @@ abono-track/
 │       ├── admin/
 │       ├── fertilizacion/
 │       ├── fertilizantes/
+│       ├── home/
 │       ├── layout/
 │       ├── predios/
 │       ├── sectores/
@@ -106,8 +112,9 @@ abono-track/
     │   └── main.js
     └── index.php
 ```
-La estructura del proyecto sigue una organización basada en arquitectura MVC, separando controladores, modelos, vistas y componentes centrales del sistema. Además, el directorio `public/` concentra los recursos accesibles desde el navegador, como estilos, imágenes, scripts y el punto de entrada principal de la aplicación.
 
+La estructura del proyecto sigue una organización basada en arquitectura MVC, separando controladores, modelos, vistas y componentes centrales del sistema. Además, el directorio `public/` concentra los recursos accesibles desde el navegador, como estilos, imágenes, scripts y el punto de entrada principal de la aplicación.
+```
 
 ## Modelo de datos
 
