@@ -63,8 +63,6 @@ El sistema permite consultar registros históricos y generar reportes nutriciona
 ## Estructura del repositorio
 
 ```text
-
-```text
 abono-track/
 ├── README.md
 ├── .gitignore
