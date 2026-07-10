@@ -60,6 +60,19 @@ El sistema permite consultar registros históricos y generar reportes nutriciona
 - Arquitectura MVC
 - Patrón de servicios para lógica de negocio
 
+## Herramientas técnicas aplicadas
+
+Durante el desarrollo y adaptación de Abono Track se utilizaron herramientas y prácticas propias del área de análisis y programación:
+
+- Control de versiones con Git.
+- Publicación y gestión del repositorio mediante GitHub.
+- Desarrollo de una aplicación web con PHP, MySQL, HTML, CSS, Bootstrap y JavaScript.
+- Organización del sistema mediante arquitectura MVC.
+- Separación de responsabilidades entre controladores, modelos, vistas y servicios.
+- Uso de base de datos relacional para la gestión de usuarios, predios, sectores, fertilizantes y registros asociados.
+- Adaptación visual de la interfaz para la identidad académica de Abono Track.
+- Pruebas locales de autenticación, navegación y funcionamiento general del sistema.
+
 ## Estructura del repositorio
 
 ```text
