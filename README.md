@@ -1,6 +1,6 @@
 # 🌱 Abono Track
 
-**Abono Track** es una plataforma web orientada a la gestión y trazabilidad de programas de fertilización agrícola. El sistema permite registrar fertilizantes, configurar distribuciones de riego, calcular aportes nutricionales NPK y generar reportes para apoyar la toma de decisiones en predios agrícolas.
+Abono Track es una plataforma web orientada a la gestión y trazabilidad de programas de fertilización agrícola. El sistema permite registrar fertilizantes, configurar distribuciones, calcular aportes nutricionales NPK y generar reportes para apoyar la toma de decisiones en predios agrícolas.
 
 Este repositorio corresponde a una versión académica desarrollada para el proyecto final del ramo **Taller de Proyecto de Especialidad**.
 
@@ -13,7 +13,7 @@ Este repositorio corresponde a una versión académica desarrollada para el proy
 
 En la agricultura, la gestión de fertilización requiere controlar múltiples variables: productos utilizados, cantidades aplicadas, distribución hacia sectores o predios, y nutrientes aportados al cultivo. Cuando estos registros se realizan de forma manual o dispersa, se dificulta la trazabilidad, el análisis histórico y la generación de reportes confiables.
 
-**Abono Track** busca centralizar esta información en una plataforma web que permita registrar y consultar datos de fertilización de manera ordenada, reduciendo errores y facilitando el seguimiento nutricional.
+Abono Track busca centralizar esta información en una plataforma web que permita registrar y consultar datos de fertilización de manera ordenada, reduciendo errores y facilitando el seguimiento nutricional.
 
 ## Objetivo general
 
@@ -23,7 +23,7 @@ Desarrollar una plataforma web para la gestión y trazabilidad de programas de f
 
 - Registrar fertilizantes con sus respectivos aportes nutricionales.
 - Gestionar aplicaciones de fertilización por fecha, predio o sector.
-- Calcular automáticamente unidades nutricionales de N, P y K.
+- Calcular automáticamente unidades nutricionales de nitrógeno, fósforo y potasio.
 - Mantener historial de fertilizaciones realizadas.
 - Generar reportes nutricionales para apoyar la toma de decisiones.
 - Organizar la información de forma clara, trazable y consultable.
