@@ -65,25 +65,46 @@ El sistema permite consultar registros históricos y generar reportes nutriciona
 ```text
 abono-track/
 ├── README.md
+├── .gitignore
+├── composer.json
+├── composer.lock
 ├── app/
 │   ├── controllers/
+│   │   ├── AdminController.php
 │   │   ├── FertilizacionController.php
-│   │   └── FertilizanteController.php
+│   │   ├── FertilizanteController.php
+│   │   ├── PrediosController.php
+│   │   ├── SectoresController.php
+│   │   └── UsersController.php
 │   ├── core/
-│   │   └── FertilizacionService.php
+│   │   ├── App.php
+│   │   ├── Controller.php
+│   │   ├── FertilizacionService.php
+│   │   └── SessionHelper.php
 │   ├── models/
-│   │   └── FertilizanteModel.php
+│   │   ├── FertilizanteModel.php
+│   │   ├── PredioModel.php
+│   │   ├── SectorModel.php
+│   │   ├── TrabajadorModel.php
+│   │   └── UserModel.php
 │   └── views/
+│       ├── admin/
 │       ├── fertilizacion/
-│       │   ├── configuracion.php
-│       │   ├── historial.php
-│       │   ├── registro.php
-│       │   └── reporte_nutricional.php
-│       └── fertilizantes/
-│           ├── form.php
-│           └── index.php
-└── database/
-    └── schema_sanitized.sql
+│       ├── fertilizantes/
+│       ├── layout/
+│       ├── predios/
+│       ├── sectores/
+│       ├── trabajadores/
+│       └── users/
+├── database/
+│   └── schema_sanitized.sql
+└── public/
+    ├── css/
+    │   └── style.css
+    ├── img/
+    ├── js/
+    │   └── main.js
+    └── index.php
 ```
 
 ## Modelo de datos
