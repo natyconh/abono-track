@@ -36,7 +36,7 @@ Permite registrar y administrar fertilizantes utilizados en el proceso agrícola
 
 ### Registro de fertilización
 
-Permite ingresar aplicaciones de fertilización, asociando productos, cantidades, fechas y sectores correspondientes.
+Permite ingresar aplicaciones de fertilización, asociando productos, cantidades, fechas, predios y sectores correspondientes.
 
 ### Cálculo nutricional NPK
 
@@ -44,11 +44,16 @@ El sistema calcula automáticamente las unidades nutricionales aportadas según 
 
 ### Configuración de distribución
 
-Permite representar cómo se distribuye el riego o fertilización entre distintos predios o sectores, facilitando el cálculo de aportes reales.
+Permite definir cómo se distribuye la fertilización entre distintos predios, sectores o instalaciones, facilitando el cálculo de aportes reales.
 
-### Historial y reportes
+### Historial y trazabilidad
 
-El sistema permite consultar registros históricos y generar reportes nutricionales para revisar aplicaciones realizadas y apoyar el análisis técnico.
+Permite consultar registros históricos de fertilización, revisar aplicaciones realizadas y mantener trazabilidad sobre los programas agrícolas.
+
+### Reportes nutricionales
+
+Permite generar reportes nutricionales para revisar los aportes realizados y apoyar el análisis técnico y la toma de decisiones.
+
 
 ## Tecnologías utilizadas
 
