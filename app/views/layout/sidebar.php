@@ -91,7 +91,9 @@ $cp = $_GET['url'] ?? 'home/index';
 
         <div class="mt-auto pt-4 text-center opacity-50">
             <small class="text-white" style="font-size: 0.7rem;">
-                &copy; <?php echo date('Y'); ?> Abono Track<br>v0.2.0
+                &copy; <?php echo date('Y'); ?> Abono Track<br>
+                Por Cristian y Nathalia<br>
+                v0.2.0
             </small>
         </div>
     </div>

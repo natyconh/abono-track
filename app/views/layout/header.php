@@ -21,7 +21,7 @@ $current_url_path = $_GET['url'] ?? 'home/index';
 </head>
 <body class="bg-light-beige d-flex flex-column min-vh-100">
 
-    <!-- Navbar -->
+       <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg sticky-top">
         <div class="container-fluid">
             <button class="navbar-toggler d-lg-none me-2" type="button" id="sidebarToggle">
@@ -33,24 +33,73 @@ $current_url_path = $_GET['url'] ?? 'home/index';
                 <span class="badge bg-light text-secondary ms-2 fw-normal border" style="font-size: 0.6rem; vertical-align: middle;">BETA</span>
             </a>
 
-            <div class="ms-auto dropdown">
-                <a href="#" class="nav-link dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown">
-                    <div class="d-none d-md-block text-end" style="line-height: 1.2;">
-                        <small class="d-block fw-bold"><?php echo htmlspecialchars(SessionHelper::getUserName() ?? 'Usuario'); ?></small>
-                    </div>
-                    <i class="bi bi-person-circle fs-4 text-secondary"></i>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end border-0 shadow">
-                    <li><h6 class="dropdown-header"><?php echo htmlspecialchars(SessionHelper::getUserName() ?? 'Usuario'); ?></h6></li>
-                    <li>
-                        <a class="dropdown-item text-danger" href="<?php echo URL_ROOT; ?>/users/logout">
-                            <i class="bi bi-box-arrow-right me-2"></i> Cerrar Sesi&oacute;n
-                        </a>
-                    </li>
-                </ul>
+            <div class="ms-auto d-flex align-items-center gap-3">
+                
+                <!-- Botón "Acerca de" visible directamente en el navbar -->
+                <button class="btn btn-sm btn-outline-success rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#aboutModal">
+                    <i class="bi bi-info-circle me-1"></i> <span class="d-none d-md-inline">Acerca del Proyecto</span>
+                </button>
+
+                <div class="dropdown">
+                    <a href="#" class="nav-link dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown">
+                        <div class="d-none d-md-block text-end" style="line-height: 1.2;">
+                            <small class="d-block fw-bold"><?php echo htmlspecialchars(SessionHelper::getUserName() ?? 'Usuario'); ?></small>
+                        </div>
+                        <i class="bi bi-person-circle fs-4 text-secondary"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow">
+                        <li><h6 class="dropdown-header"><?php echo htmlspecialchars(SessionHelper::getUserName() ?? 'Usuario'); ?></h6></li>
+                        <li>
+                            <a class="dropdown-item text-danger" href="<?php echo URL_ROOT; ?>/users/logout">
+                                <i class="bi bi-box-arrow-right me-2"></i> Cerrar Sesi&oacute;n
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     </nav>
+
+    <!-- Modal Acerca de -->
+    <div class="modal fade" id="aboutModal" tabindex="-1" aria-labelledby="aboutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-light border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold text-primary-dark-green" id="aboutModalLabel">
+                        🌿 abono·track
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <p class="text-muted small mb-4">
+                        Plataforma web orientada a la gestión y trazabilidad de programas de fertilización agrícola.
+                    </p>
+                    
+                    <div class="mb-3">
+                        <h6 class="fw-bold mb-1"><i class="bi bi-code-slash me-2"></i>Estudiantes</h6>
+                        <ul class="list-unstyled ms-4 small mb-0">
+                            <li>Cristian Manzano Ayala</li>
+                            <li>Nathalia Castro Muñoz</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-0">
+                        <h6 class="fw-bold mb-1"><i class="bi bi-mortarboard me-2"></i>Contexto Académico</h6>
+                        <ul class="list-unstyled ms-4 small mb-0 text-muted">
+                            <li><strong>Institución:</strong> AIEP</li>
+                            <li><strong>Carrera:</strong> Ing. de Ejecución en Informática</li>
+                            <li><strong>Asignatura:</strong> Taller de Proyecto de Especialidad</li>
+                            <li><strong>Profesor:</strong> Felipe Montenegro González</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Fin Modal -->
 
     <div class="d-flex flex-grow-1">
 

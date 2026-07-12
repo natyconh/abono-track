@@ -12,7 +12,9 @@
                 <span class="mx-2">|</span>
                 &copy; <?php echo date('Y'); ?> <?php echo SITE_NAME; ?>
                 <span class="mx-2">·</span>
-                v0.1.0
+                 Desarrollado por Cristian Manzano y Nathalia Castro
+                <span class="mx-2">·</span>
+                v0.2.0
             </p>
         </div>
     </footer>
