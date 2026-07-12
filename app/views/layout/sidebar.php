@@ -47,16 +47,16 @@ $cp = $_GET['url'] ?? 'home/index';
                     <i class="bi bi-calendar2-week-fill"></i> Programas
                 </a>
             </li>
+            
+            <li class="nav-item">
+                <a class="nav-link <?php echo (strpos($cp, 'fertilizacion/configuracion') === 0) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/fertilizacion/configuracion">
+                    <i class="bi bi-diagram-3-fill"></i> Config. Hidráulica
+                </a>
+            </li>
 
             <!-- SECCIÓN OPERACIÓN -->
             <li class="my-2 border-top border-white border-opacity-10"></li>
             <div class="text-white-50 small text-uppercase fw-bold mb-2 ps-3" style="font-size: 0.7rem; letter-spacing: 1px;">Operación</div>
-
-            <li class="nav-item">
-                <a class="nav-link <?php echo (strpos($cp, 'riego') === 0) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/riego">
-                    <i class="bi bi-droplet-fill"></i> Riego Diario
-                </a>
-            </li>
 
             <li class="nav-item">
                 <a class="nav-link <?php echo ($cp === 'fertilizacion' || $cp === 'fertilizacion/index') ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/fertilizacion">
@@ -70,11 +70,6 @@ $cp = $_GET['url'] ?? 'home/index';
                 </a>
             </li>
 
-            <li class="nav-item">
-                <a class="nav-link <?php echo (strpos($cp, 'fertilizacion/configuracion') === 0) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/fertilizacion/configuracion">
-                    <i class="bi bi-diagram-3-fill"></i> Config. Hidráulica
-                </a>
-            </li>
 
             <!-- SECCIÓN REPORTES -->
             <li class="my-2 border-top border-white border-opacity-10"></li>

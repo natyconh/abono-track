@@ -71,21 +71,7 @@
     <div class="col-12">
         <h6 class="text-muted fw-bold text-uppercase mb-3" style="font-size: 0.75rem; letter-spacing: 0.08em;">Accesos rápidos</h6>
     </div>
-    <div class="col-md-4">
-        <a href="<?php echo URL_ROOT; ?>/riego" class="text-decoration-none">
-            <div class="card border-0 shadow-sm hover-card h-100">
-                <div class="card-body p-4 d-flex align-items-start gap-3">
-                    <div class="flex-shrink-0 p-2 rounded-3" style="background: rgba(126,196,207,0.15);">
-                        <i class="bi bi-droplet-half fs-4" style="color: var(--vertical-water);"></i>
-                    </div>
-                    <div>
-                        <h6 class="fw-bold mb-1">Registro de Riego</h6>
-                        <p class="card-text text-muted small mb-0">Ingresa los tiempos de riego diarios por predio.</p>
-                    </div>
-                </div>
-            </div>
-        </a>
-    </div>
+
     <div class="col-md-4">
         <a href="<?php echo URL_ROOT; ?>/fertilizacion" class="text-decoration-none">
             <div class="card border-0 shadow-sm hover-card h-100">
