@@ -1,7 +1,8 @@
 <?php
-// _legacy/abono-track/app/views/layout/sidebar.php
-// Sidebar de Abono Track — menú reducido al dominio de abonado/riego
+// app/views/layout/sidebar.php
+// Sidebar de Abono Track — menú completo con todos los módulos
 // Roles disponibles: Admin, Usuario
+$cp = $_GET['url'] ?? 'home/index';
 ?>
 <nav id="sidebar" class="bg-primary-dark-green p-3" style="min-width: 240px; transition: all 0.3s;">
     <div class="position-sticky d-flex flex-column h-100">
@@ -10,9 +11,9 @@
 
         <ul class="nav flex-column gap-1">
 
-            <!-- Home -->
+            <!-- Home / Dashboard -->
             <li class="nav-item">
-                <a class="nav-link <?php echo (strpos($current_url_path, 'home') === 0) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/home/index">
+                <a class="nav-link <?php echo (strpos($cp, 'home') === 0 || $cp === '') ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/home/index">
                     <i class="bi bi-grid-1x2-fill"></i> Dashboard
                 </a>
             </li>
@@ -22,19 +23,19 @@
             <div class="text-white-50 small text-uppercase fw-bold mb-2 ps-3" style="font-size: 0.7rem; letter-spacing: 1px;">Catálogos</div>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo (strpos($current_url_path, 'fertilizante') === 0) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/fertilizante">
-                    <i class="bi bi-bucket-fill"></i> Productos / Fertilizantes
+                <a class="nav-link <?php echo (strpos($cp, 'fertilizante') === 0) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/fertilizante">
+                    <i class="bi bi-bucket-fill"></i> Fertilizantes
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo (strpos($current_url_path, 'cultivos') === 0) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/cultivos">
+                <a class="nav-link <?php echo (strpos($cp, 'cultivos') === 0) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/cultivos">
                     <i class="bi bi-tree-fill"></i> Cultivos
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo (strpos($current_url_path, 'predios') === 0) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/predios">
+                <a class="nav-link <?php echo (strpos($cp, 'predios') === 0) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/predios">
                     <i class="bi bi-map-fill"></i> Predios / Cuarteles
                 </a>
             </li>
@@ -44,16 +45,38 @@
             <div class="text-white-50 small text-uppercase fw-bold mb-2 ps-3" style="font-size: 0.7rem; letter-spacing: 1px;">Operación</div>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo (strpos($current_url_path, 'riego') === 0) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/riego">
+                <a class="nav-link <?php echo (strpos($cp, 'riego') === 0) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/riego">
                     <i class="bi bi-droplet-fill"></i> Riego Diario
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo (strpos($current_url_path, 'fertilizacion') === 0) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/fertilizacion">
+                <a class="nav-link <?php echo (strpos($cp, 'fertilizacion') === 0) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/fertilizacion">
                     <i class="bi bi-eyedropper"></i> Fertirrigación
                 </a>
             </li>
+
+            <!-- SECCIÓN REPORTES -->
+            <li class="my-2 border-top border-white border-opacity-10"></li>
+            <div class="text-white-50 small text-uppercase fw-bold mb-2 ps-3" style="font-size: 0.7rem; letter-spacing: 1px;">Reportes</div>
+
+            <li class="nav-item">
+                <a class="nav-link <?php echo (strpos($cp, 'fertilizacion/reporteNutricional') === 0) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/fertilizacion/reporteNutricional">
+                    <i class="bi bi-bar-chart-line-fill"></i> Reporte NPK
+                </a>
+            </li>
+
+            <!-- SECCIÓN ADMINISTRACIÓN (solo Admin) -->
+            <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'Admin'): ?>
+            <li class="my-2 border-top border-white border-opacity-10"></li>
+            <div class="text-white-50 small text-uppercase fw-bold mb-2 ps-3" style="font-size: 0.7rem; letter-spacing: 1px;">Administración</div>
+
+            <li class="nav-item">
+                <a class="nav-link <?php echo (strpos($cp, 'users') === 0) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/users">
+                    <i class="bi bi-people-fill"></i> Usuarios
+                </a>
+            </li>
+            <?php endif; ?>
 
         </ul>
 
