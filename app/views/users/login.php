@@ -13,11 +13,15 @@
     <link rel="stylesheet" href="<?php echo URL_ROOT; ?>/css/style.css">
     <style>
     body.login-page {
-        background: linear-gradient(135deg, #1a3a2a 0%, #2d5a3d 50%, #1a3a2a 100%);
+        background-image: url('<?php echo URL_ROOT; ?>/img/login-bg.jpg');
+        background-size: cover;
+        background-position: center center;
+        background-repeat: no-repeat;
         min-height: 100vh;
         display: flex;
         align-items: center;
         justify-content: center;
+        position: relative; /* Necesario para el overlay */
     }
     .login-card-glass {
         background: rgba(255,255,255,0.12);
