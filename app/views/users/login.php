@@ -1,6 +1,5 @@
 <?php
-// _legacy/abono-track/app/views/users/login.php
-// Página de login de Abono Track — adaptado desde Ryzoma Agro
+// Página de login de Abono Track 
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -74,6 +73,9 @@
                             <div class="mb-3" style="font-size: 3rem;">🌿</div>
                             <div class="brand-name">abono<span class="brand-dot">·</span>track</div>
                             <div class="tagline">Gestión de Fertirrigación</div>
+                            <div class="small" style="color: rgba(47, 34, 34, 0.4); font-size: 0.8rem;">
+                            Creado por Cristian Manzano & Nathalia Castro
+                        </div>
                         </div>
 
                         <?php SessionHelper::displayFlash(); ?>
