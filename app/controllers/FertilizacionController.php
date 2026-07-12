@@ -89,10 +89,6 @@ class FertilizacionController extends Controller {
     //  AJAX — CONFIGURACIÓN HIDRÁULICA
     // =========================================================
 
-    /**
-     * Crea un cabezal virtual (predio tipo cabezal_virtual) desde el modal.
-     * POST /fertilizacion/crearCabezalRapido
-     */
     public function crearCabezalRapido() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->respondJson(['success' => false, 'message' => 'Método no permitido']);
@@ -129,10 +125,6 @@ class FertilizacionController extends Controller {
         }
     }
 
-    /**
-     * Elimina (físicamente) un cabezal virtual si no tiene registros dependientes.
-     * POST /fertilizacion/eliminarCabezalVirtual
-     */
     public function eliminarCabezalVirtual() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->respondJson(['success' => false, 'message' => 'Método no permitido']);
@@ -146,27 +138,20 @@ class FertilizacionController extends Controller {
             return;
         }
 
-        // Verificar que pertenece al usuario y es cabezal_virtual
         $predio = $this->predioModel->obtenerPredioPorId($id);
         if (!$predio || $predio->tipo_superficie !== 'cabezal_virtual') {
             $this->respondJson(['success' => false, 'message' => 'Cabezal no encontrado o no es virtual.']);
             return;
         }
 
-        // Intentar borrado físico; si tiene FK constraints, hacer soft-delete
         if ($this->predioModel->eliminarFisicamente($id)) {
             $this->respondJson(['success' => true, 'message' => 'Cabezal eliminado.']);
         } else {
-            // Fallback: soft-delete (activo = 0)
             $this->predioModel->eliminarPredio($id);
             $this->respondJson(['success' => true, 'message' => 'Cabezal ocultado (tenía registros asociados).']);
         }
     }
 
-    /**
-     * Devuelve las distribuciones actuales de un predio origen.
-     * GET /fertilizacion/getDistribuciones/{id}
-     */
     public function getDistribuciones($origenId = null) {
         if (!$origenId) {
             $this->respondJson([]);
@@ -176,10 +161,6 @@ class FertilizacionController extends Controller {
         $this->respondJson($distribuciones);
     }
 
-    /**
-     * Guarda (inserta o actualiza) una relación origen → destino con porcentaje.
-     * POST /fertilizacion/guardarDistribucion
-     */
     public function guardarDistribucion() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->respondJson(['success' => false, 'message' => 'Método no permitido']);
@@ -208,10 +189,6 @@ class FertilizacionController extends Controller {
         }
     }
 
-    /**
-     * Elimina una relación de distribución por su ID.
-     * POST /fertilizacion/eliminarDistribucion
-     */
     public function eliminarDistribucion() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->respondJson(['success' => false, 'message' => 'Método no permitido']);
@@ -232,11 +209,6 @@ class FertilizacionController extends Controller {
         }
     }
 
-    /**
-     * Calcula la proporción de superficie entre predios seleccionados
-     * para el Asistente Automático.
-     * POST /fertilizacion/calcularProporcionSuperficie
-     */
     public function calcularProporcionSuperficie() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->respondJson(['success' => false, 'message' => 'Método no permitido']);
@@ -250,8 +222,6 @@ class FertilizacionController extends Controller {
         }
 
         $ids = array_map('intval', $ids);
-
-        // Obtener superficie_total de cada predio seleccionado
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
         $this->db->query(
             "SELECT id, nombre, superficie_total
@@ -260,7 +230,6 @@ class FertilizacionController extends Controller {
                AND usuario_id = ?
                AND activo = 1"
         );
-        // Bind posicional manual
         $stmt = $this->db->getStatement();
         foreach ($ids as $i => $val) {
             $stmt->bindValue($i + 1, $val, PDO::PARAM_INT);
@@ -279,9 +248,9 @@ class FertilizacionController extends Controller {
         $proporciones = [];
         foreach ($predios as $p) {
             $proporciones[] = [
-                'id'          => $p->id,
-                'nombre'      => $p->nombre,
-                'porcentaje'  => round(($p->superficie_total / $totalSuperficie) * 100, 2),
+                'id'         => $p->id,
+                'nombre'     => $p->nombre,
+                'porcentaje' => round(($p->superficie_total / $totalSuperficie) * 100, 2),
             ];
         }
 
@@ -424,18 +393,32 @@ class FertilizacionController extends Controller {
 
         if ($mesActual >= 9) {
             $inicioTemporada = $yearActual . '-09-01';
-            $finTemporada    = ($yearActual + 1) . '-08-31';
         } else {
             $inicioTemporada = ($yearActual - 1) . '-09-01';
-            $finTemporada    = $yearActual . '-08-31';
         }
 
-        $datosNutricionales = $this->fertilizacionService->obtenerReporteNutricionalTemporada($inicioTemporada, date('Y-m-d'));
+        $datosNutricionales = $this->fertilizacionService->obtenerReporteNutricionalTemporada(
+            $inicioTemporada, date('Y-m-d')
+        );
+
+        // Cargar objetivos acumulados del programa de temporada activo
+        // para mostrar alertas de atraso por predio
+        $objetivosPorPredio = [];
+        try {
+            require_once APP_ROOT . '/models/ProgramaFertilizacionModel.php';
+            $programaModel = new ProgramaFertilizacionModel($this->db, $this->usuario_id);
+            $temporada     = date('n') >= 9 ? date('Y') : (date('Y') - 1);
+            $objetivosPorPredio = $programaModel->obtenerObjetivosAcumuladosPorPredio((string)$temporada);
+        } catch (Exception $e) {
+            // Si el método no existe aún, el reporte sigue funcionando sin alertas
+            $objetivosPorPredio = [];
+        }
 
         $data = [
             'titulo'           => 'Reporte Nutricional Acumulado — Abono Track',
             'inicio_temporada' => $inicioTemporada,
             'datos'            => $datosNutricionales,
+            'objetivos'        => $objetivosPorPredio,
             'breadcrumbs'      => [
                 ['label' => 'Fertirrigación', 'url' => URL_ROOT . '/fertilizacion'],
                 ['label' => 'Reporte Nutricional'],
@@ -458,7 +441,7 @@ class FertilizacionController extends Controller {
 
         $output = fopen('php://output', 'w');
         fputs($output, "\xEF\xBB\xBF");
-        fputcsv($output, ['Sector/Predio', 'Cultivo', 'Superficie (Ha)', 'N (Unidades/Ha)', 'P (Unidades/Ha)', 'K (Unidades/Ha)', 'Total Extra (Unidades)'], ';');
+        fputcsv($output, ['Sector/Predio', 'Cultivo', 'Superficie (Ha)', 'N (kg/ha)', 'P (kg/ha)', 'K (kg/ha)', 'Micronutrientes totales'], ';');
 
         foreach ($datos as $row) {
             fputcsv($output, [
@@ -474,19 +457,6 @@ class FertilizacionController extends Controller {
 
         fclose($output);
         exit();
-    }
-
-    public function generarLinkPublico() {
-        $this->protect();
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $token = $this->fertilizacionService->generarTokenReporte($this->usuario_id);
-            if ($token) {
-                $link = URL_ROOT . '/publico/reporte/' . $token;
-                $this->respondJson(['success' => true, 'link' => $link]);
-            } else {
-                $this->respondJson(['success' => false, 'message' => 'Error al generar token.']);
-            }
-        }
     }
 
     public function eliminarRegistro($id) {
