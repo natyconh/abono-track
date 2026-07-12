@@ -8,7 +8,7 @@ class CultivosController extends Controller {
 
     public function __construct() {
         parent::__construct();
-        $this->protect(['Admin']);
+        $this->protect();
         $this->cultivoModel = $this->model('CultivoModel');
     }
 
@@ -17,7 +17,6 @@ class CultivosController extends Controller {
             'titulo'      => 'Catálogo de Cultivos — Abono Track',
             'cultivos'    => $this->cultivoModel->obtenerTodos(),
             'breadcrumbs' => [
-                ['label' => 'Administración', 'url' => URL_ROOT . '/admin'],
                 ['label' => 'Cultivos'],
             ],
         ];

@@ -1,7 +1,6 @@
 <?php
 /**
- * Controlador Admin para Insumos/Fertilizantes (CRUD)
- * Abono Track
+ * Controlador para Insumos/Fertilizantes (CRUD) — Abono Track
  */
 class FertilizanteController extends Controller {
 
@@ -9,16 +8,15 @@ class FertilizanteController extends Controller {
 
     public function __construct() {
         parent::__construct();
-        $this->protect(['Admin']);
+        $this->protect();
         $this->fertilizanteModel = $this->model('FertilizanteModel');
     }
 
     public function index() {
         $data = [
-            'titulo'       => 'Catálogo de Fertilizantes e Insumos — Abono Track',
+            'titulo'        => 'Catálogo de Fertilizantes e Insumos — Abono Track',
             'fertilizantes' => $this->fertilizanteModel->obtenerTodos(),
-            'breadcrumbs'  => [
-                ['label' => 'Administración', 'url' => URL_ROOT . '/admin'],
+            'breadcrumbs'   => [
                 ['label' => 'Fertilizantes'],
             ],
         ];
@@ -29,14 +27,14 @@ class FertilizanteController extends Controller {
         $data = [
             'titulo'   => 'Nuevo Producto',
             'producto' => (object)[
-                'id'                  => null,
-                'nombre_comercial'    => '',
-                'tipo_producto'       => 'fertilizante',
-                'tipo_unidad'         => 'kg',
-                'densidad'            => '1.000',
-                'porcentaje_n'        => '',
-                'porcentaje_p'        => '',
-                'porcentaje_k'        => '',
+                'id'                    => null,
+                'nombre_comercial'      => '',
+                'tipo_producto'         => 'fertilizante',
+                'tipo_unidad'           => 'kg',
+                'densidad'              => '1.000',
+                'porcentaje_n'          => '',
+                'porcentaje_p'          => '',
+                'porcentaje_k'          => '',
                 'micronutrientes_array' => [],
             ],
             'breadcrumbs' => [

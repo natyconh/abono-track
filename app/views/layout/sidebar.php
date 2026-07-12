@@ -1,7 +1,6 @@
 <?php
 // app/views/layout/sidebar.php
-// Sidebar de Abono Track — menú completo con todos los módulos
-// Roles disponibles: Admin, Usuario
+// Sidebar de Abono Track — menú completo
 $cp = $_GET['url'] ?? 'home/index';
 ?>
 <nav id="sidebar" class="bg-primary-dark-green p-3" style="min-width: 240px; transition: all 0.3s;">
@@ -65,18 +64,6 @@ $cp = $_GET['url'] ?? 'home/index';
                     <i class="bi bi-bar-chart-line-fill"></i> Reporte NPK
                 </a>
             </li>
-
-            <!-- SECCIÓN ADMINISTRACIÓN (solo Admin) -->
-            <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'Admin'): ?>
-            <li class="my-2 border-top border-white border-opacity-10"></li>
-            <div class="text-white-50 small text-uppercase fw-bold mb-2 ps-3" style="font-size: 0.7rem; letter-spacing: 1px;">Administración</div>
-
-            <li class="nav-item">
-                <a class="nav-link <?php echo (strpos($cp, 'users') === 0) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/users">
-                    <i class="bi bi-people-fill"></i> Usuarios
-                </a>
-            </li>
-            <?php endif; ?>
 
         </ul>
 

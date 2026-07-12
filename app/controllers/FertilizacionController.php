@@ -22,7 +22,7 @@ class FertilizacionController extends Controller {
         require_once APP_ROOT . '/models/ConfiguracionRiegoModel.php';
         $this->configRiegoModel = new ConfiguracionRiegoModel($this->db, $this->usuario_id);
 
-        $this->protect(['Admin', 'Usuario_riego', 'Usuario_general']);
+        $this->protect();
     }
 
     public function index() {
@@ -78,10 +78,10 @@ class FertilizacionController extends Controller {
         try {
             if ($id) {
                 $datos = [
-                    'usuario_id'       => $this->usuario_id,
-                    'fecha'            => $fecha,
+                    'usuario_id'        => $this->usuario_id,
+                    'fecha'             => $fecha,
                     'predio_cabezal_id' => $cabezal_id,
-                    'fertilizante_id'  => $fertilizantes[0],
+                    'fertilizante_id'   => $fertilizantes[0],
                     'cantidad_aplicada' => $cantidades[0],
                 ];
                 if ($this->fertilizacionService->actualizarAplicacion($id, $datos)) {
@@ -132,9 +132,9 @@ class FertilizacionController extends Controller {
     }
 
     public function verificarExistenciaAjax() {
-        $fecha     = $_POST['fecha']    ?? '';
-        $cabezal   = $_POST['cabezal']  ?? '';
-        $producto  = $_POST['producto'] ?? '';
+        $fecha     = $_POST['fecha']      ?? '';
+        $cabezal   = $_POST['cabezal']    ?? '';
+        $producto  = $_POST['producto']   ?? '';
         $excludeId = $_POST['exclude_id'] ?? null;
 
         if (!$fecha || !$cabezal || !$producto) {
@@ -225,10 +225,10 @@ class FertilizacionController extends Controller {
             fputcsv($output, [
                 $row->predio,
                 $row->cultivo ?? 'N/A',
-                number_format($row->hectareas, 2, ',', ''),
-                number_format($row->n_ha,      2, ',', ''),
-                number_format($row->p_ha,      2, ',', ''),
-                number_format($row->k_ha,      2, ',', ''),
+                number_format($row->hectareas,   2, ',', ''),
+                number_format($row->n_ha,        2, ',', ''),
+                number_format($row->p_ha,        2, ',', ''),
+                number_format($row->k_ha,        2, ',', ''),
                 number_format($row->total_extra, 2, ',', ''),
             ], ';');
         }
@@ -238,8 +238,7 @@ class FertilizacionController extends Controller {
     }
 
     public function generarLinkPublico() {
-        $this->protect(['Admin']);
-
+        $this->protect();
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $token = $this->fertilizacionService->generarTokenReporte($this->usuario_id);
             if ($token) {
@@ -256,48 +255,39 @@ class FertilizacionController extends Controller {
         $this->respondJson(['success' => true, 'detalle' => $detalle]);
     }
 
-    public function configuracion() {
-        $this->protect(['Admin']);
-        $predios = $this->predioModel->obtenerPuntosInyeccion();
-        foreach ($predios as $p) {
-            $p->distribuciones = $this->configRiegoModel->obtenerPorOrigen($p->id);
-        }
-        $data = [
-            'titulo'  => 'Configuración de Distribución Hidráulica — Abono Track',
-            'predios' => $predios,
-        ];
-        $this->view('fertilizacion/configuracion', $data);
-    }
+    public function guardarConfigDistribucion() {
+        if ($_SERVER['REQUEST_METHOD'] != 'POST') $this->redirect('fertilizacion/historial');
+        $cabezal_id  = $_POST['cabezal_id']  ?? null;
+        $porcentajes = $_POST['porcentaje']   ?? [];
+        $predios     = $_POST['predio_id']    ?? [];
 
-    public function getDistribuciones($origen) {
-        $this->protect(['Admin']);
-        $this->respondJson($this->configRiegoModel->obtenerPorOrigen($origen));
-    }
-
-    public function guardarDistribucion() {
-        $this->protect(['Admin']);
-        $origen     = $_POST['origen_id'];
-        $destino    = $_POST['destino_id'];
-        $porcentaje = $_POST['porcentaje'];
-        if ($origen == $destino) {
-            $this->respondJson(['success' => false, 'message' => 'Origen y destino iguales.']);
+        if (empty($cabezal_id)) {
+            $this->respondJson(['success' => false, 'message' => 'Cabezal no especificado.']);
             return;
         }
-        if ($this->configRiegoModel->guardarRelacion($origen, $destino, $porcentaje)) {
-            $this->respondJson(['success' => true]);
-        } else {
-            $this->respondJson(['success' => false, 'message' => 'Error al guardar.']);
+
+        $distribuciones = [];
+        foreach ($predios as $i => $pid) {
+            if (!empty($pid) && isset($porcentajes[$i])) {
+                $distribuciones[] = [
+                    'predio_destino_id' => (int)$pid,
+                    'porcentaje'        => (float)$porcentajes[$i],
+                ];
+            }
         }
+
+        $result = $this->configRiegoModel->guardarDistribucion($cabezal_id, $distribuciones);
+        $this->respondJson(['success' => $result]);
     }
 
-    public function eliminarDistribucion() {
-        $this->protect(['Admin']);
-        $id = $_POST['id'];
-        if ($this->configRiegoModel->eliminarRelacion($id)) {
-            $this->respondJson(['success' => true]);
+    public function eliminarRegistro($id) {
+        if ($_SERVER['REQUEST_METHOD'] != 'POST') $this->redirect('fertilizacion/historial');
+        if ($this->fertilizacionService->eliminarAplicacion($id)) {
+            SessionHelper::setFlash('Registro eliminado.', 'success');
         } else {
-            $this->respondJson(['success' => false]);
+            SessionHelper::setFlash('No se pudo eliminar el registro.', 'danger');
         }
+        $this->redirect('fertilizacion/historial');
     }
 }
 ?>
