@@ -1,6 +1,5 @@
 <?php
-// _legacy/abono-track/app/views/layout/header.php
-// Header de Abono Track —
+// app/views/layout/header.php
 $current_url_path = $_GET['url'] ?? 'home/index';
 ?>
 <!DOCTYPE html>
@@ -16,7 +15,7 @@ $current_url_path = $_GET['url'] ?? 'home/index';
     <?php endif; ?>
 
     <link rel="stylesheet" href="<?php echo URL_ROOT; ?>/css/style.css?v=1.0">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌿</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>&#x1F33F;</text></svg>">
 
     <title><?php echo isset($titulo) ? $titulo . ' - Abono Track' : 'Abono Track'; ?></title>
 </head>
@@ -30,7 +29,7 @@ $current_url_path = $_GET['url'] ?? 'home/index';
             </button>
 
             <a class="navbar-brand" href="<?php echo URL_ROOT; ?>">
-                abono<span class="brand-y">·</span>track
+                abono<span class="brand-y">&middot;</span>track
                 <span class="badge bg-light text-secondary ms-2 fw-normal border" style="font-size: 0.6rem; vertical-align: middle;">BETA</span>
             </a>
 
@@ -42,12 +41,10 @@ $current_url_path = $_GET['url'] ?? 'home/index';
                     <i class="bi bi-person-circle fs-4 text-secondary"></i>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end border-0 shadow">
-                    <li><h6 class="dropdown-header">Cuenta</h6></li>
-                    <li><a class="dropdown-item" href="<?php echo URL_ROOT; ?>/users/perfil"><i class="bi bi-person-gear me-2"></i> Mi Perfil</a></li>
-                    <li><hr class="dropdown-divider"></li>
+                    <li><h6 class="dropdown-header"><?php echo htmlspecialchars(SessionHelper::getUserName() ?? 'Usuario'); ?></h6></li>
                     <li>
                         <a class="dropdown-item text-danger" href="<?php echo URL_ROOT; ?>/users/logout">
-                            <i class="bi bi-box-arrow-right me-2"></i> Cerrar Sesión
+                            <i class="bi bi-box-arrow-right me-2"></i> Cerrar Sesi&oacute;n
                         </a>
                     </li>
                 </ul>
@@ -64,7 +61,7 @@ $current_url_path = $_GET['url'] ?? 'home/index';
         <main class="container-fluid my-4 p-4 flex-grow-1 bg-white shadow-sm rounded-lg mx-3">
 
             <?php if (isset($breadcrumbs) && !empty($breadcrumbs) && is_array($breadcrumbs)): ?>
-                <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '/';">
+                <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '/'">
                     <ol class="breadcrumb mb-4">
                         <li class="breadcrumb-item"><a href="<?php echo URL_ROOT; ?>/home/index" class="text-decoration-none text-muted"><i class="bi bi-house-fill"></i></a></li>
                         <?php
