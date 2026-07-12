@@ -207,7 +207,7 @@ class FertilizacionService {
                             k_objetivo,
                             micronutrientes_objetivo,
                             observaciones
-                        FROM programas_fertilizacion
+                        FROM programa_fertilizacion
                         WHERE predio_id = :predio AND temporada = :temporada
                         ORDER BY semana ASC";
         $this->db->query($sqlPrograma);
