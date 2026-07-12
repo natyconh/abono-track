@@ -1,8 +1,23 @@
 -- =============================================================
 -- ABONO TRACK — Schema SQL MVP Final
--- Versión: 1.1.0
+-- Versión: 1.2.0
 -- Alcance: gestión de fertilización, predios, programas y comparación
 -- Cambios v1.1.0: columna `estado` en programa_fertilizacion
+-- Cambios v1.2.0: índice compuesto en fertilizaciones_reales para
+--   optimizar compararProgramaVsAplicado (cruce por ventana de fechas).
+--   Ver: app/core/FertilizacionService.php → compararProgramaVsAplicado()
+--
+-- DECISIÓN DE DISEÑO — Comparador Programa vs Aplicado (v1.2.0)
+-- El cruce de datos planificados vs reales se hace por ventana de fechas,
+-- NO por semana ISO (WEEK(fecha,1)). Razones:
+--   1. La semana ISO del año (1–53) no coincide necesariamente con la semana
+--      lógica de la temporada agrícola, causando desfases entre años.
+--   2. Aplicaciones registradas ligeramente fuera del rango exacto del programa
+--      (e.g. el día anterior al inicio o posterior al cierre) quedan huérfanas
+--      con el enfoque ISO y no aparecen en el comparador.
+--   Solución: cada semana del programa define una ventana
+--     [fecha_estimada_semana_i  ..  fecha_estimada_semana_{i+1} − 1 día].
+--   El rango de consulta SQL se amplía ±7 días en los extremos de la temporada.
 -- =============================================================
 
 SET NAMES 'utf8mb4';
@@ -117,6 +132,11 @@ CREATE TABLE IF NOT EXISTS `fertilizaciones_reales` (
   PRIMARY KEY (`id`),
   INDEX `idx_fr_cabezal` (`fertilizacion_cabezal_id`),
   INDEX `idx_fr_predio` (`predio_destino_id`),
+  -- v1.2.0: índice compuesto para compararProgramaVsAplicado.
+  -- La query filtra por predio_destino_id y hace JOIN con fertilizaciones_cabezal
+  -- por fertilizacion_cabezal_id en un solo barrido. Sin este índice el planner
+  -- haría full-scan de fr para cada temporada consultada.
+  INDEX `idx_fr_predio_cab` (`predio_destino_id`, `fertilizacion_cabezal_id`),
   CONSTRAINT `fk_fert_real_cab` FOREIGN KEY (`fertilizacion_cabezal_id`) REFERENCES `fertilizaciones_cabezal`(`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_fert_real_predio` FOREIGN KEY (`predio_destino_id`) REFERENCES `predios`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -151,13 +171,43 @@ CREATE TABLE IF NOT EXISTS `programa_fertilizacion` (
   CONSTRAINT `fk_pf_cultivo` FOREIGN KEY (`cultivo_id`) REFERENCES `cultivos`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Programa semanal de fertilización NPK por predio y temporada';
 
+CREATE TABLE IF NOT EXISTS `reportes_publicos` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `usuario_id` INT UNSIGNED NOT NULL,
+  `token` VARCHAR(64) NOT NULL UNIQUE,
+  `expiracion` DATETIME NOT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_rp_usuario` (`usuario_id`),
+  CONSTRAINT `fk_rp_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ================================================================
--- SCRIPT DE MIGRACIÓN PARA INSTALACIONES EXISTENTES (v1.0 → v1.1)
--- Ejecutar manualmente si la tabla ya existe en producción:
+-- MIGRACIONES PARA INSTALACIONES EXISTENTES
 -- ================================================================
+
+-- v1.0 → v1.1: columna estado en programa_fertilizacion
+-- ----------------------------------------------------------------
 -- ALTER TABLE `programa_fertilizacion`
 --   ADD COLUMN `estado` ENUM('activo','archivado','borrador')
 --     NOT NULL DEFAULT 'activo'
 --     COMMENT 'activo=visible en reportes, archivado=cerrado, borrador=en preparación'
 --     AFTER `temporada`,
 --   ADD INDEX `idx_pf_estado` (`estado`);
+
+-- v1.1 → v1.2: índice compuesto para comparador por ventana de fechas
+-- ----------------------------------------------------------------
+-- ALTER TABLE `fertilizaciones_reales`
+--   ADD INDEX `idx_fr_predio_cab` (`predio_destino_id`, `fertilizacion_cabezal_id`);
+--
+-- Opcional — crear tabla reportes_publicos si no existe aún:
+-- CREATE TABLE IF NOT EXISTS `reportes_publicos` (
+--   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+--   `usuario_id` INT UNSIGNED NOT NULL,
+--   `token` VARCHAR(64) NOT NULL UNIQUE,
+--   `expiracion` DATETIME NOT NULL,
+--   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+--   PRIMARY KEY (`id`),
+--   UNIQUE KEY `uq_rp_usuario` (`usuario_id`),
+--   CONSTRAINT `fk_rp_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios`(`id`) ON DELETE CASCADE
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
