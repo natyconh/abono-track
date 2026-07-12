@@ -1,6 +1,5 @@
 <?php
 // app/views/layout/sidebar.php
-// Sidebar de Abono Track — menú completo
 $cp = $_GET['url'] ?? 'home/index';
 ?>
 <nav id="sidebar" class="bg-primary-dark-green p-3" style="min-width: 240px; transition: all 0.3s;">
@@ -36,6 +35,16 @@ $cp = $_GET['url'] ?? 'home/index';
             <li class="nav-item">
                 <a class="nav-link <?php echo (strpos($cp, 'predios') === 0) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/predios">
                     <i class="bi bi-map-fill"></i> Predios / Cuarteles
+                </a>
+            </li>
+
+            <!-- SECCIÓN PLANIFICACIÓN -->
+            <li class="my-2 border-top border-white border-opacity-10"></li>
+            <div class="text-white-50 small text-uppercase fw-bold mb-2 ps-3" style="font-size: 0.7rem; letter-spacing: 1px;">Planificación</div>
+
+            <li class="nav-item">
+                <a class="nav-link <?php echo (strpos($cp, 'programa') === 0) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/programa">
+                    <i class="bi bi-calendar2-week-fill"></i> Programas
                 </a>
             </li>
 
@@ -77,11 +86,17 @@ $cp = $_GET['url'] ?? 'home/index';
                 </a>
             </li>
 
+            <li class="nav-item">
+                <a class="nav-link <?php echo (strpos($cp, 'programa/comparar') === 0) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/programa/comparar">
+                    <i class="bi bi-bar-chart-steps"></i> Programa vs Aplicado
+                </a>
+            </li>
+
         </ul>
 
         <div class="mt-auto pt-4 text-center opacity-50">
             <small class="text-white" style="font-size: 0.7rem;">
-                &copy; <?php echo date('Y'); ?> Abono Track<br>v0.1.0
+                &copy; <?php echo date('Y'); ?> Abono Track<br>v0.2.0
             </small>
         </div>
     </div>

@@ -1,7 +1,6 @@
 <?php
 // app/core/FertilizacionService.php — Abono Track
 // Lógica de negocio NPK: registra, actualiza y reporta aplicaciones de fertilizante.
-// ADAPTADO: eliminado empresa_id de todos los queries (single-tenant).
 
 class FertilizacionService {
 
@@ -160,12 +159,13 @@ class FertilizacionService {
         $this->db->bind(':fin',    $fechaFin);
         $rows = $this->db->resultSet();
 
-        // Agregar micronutrientes en PHP
+        // Agregar micronutrientes en PHP — FIX: descarta strings vacíos y JSONs inválidos
         $sqlMicros = "SELECT fr.predio_destino_id, fr.unidades_micronutrientes
                       FROM fertilizaciones_reales fr
                       JOIN fertilizaciones_cabezal fc ON fr.fertilizacion_cabezal_id = fc.id
                       WHERE fc.fecha BETWEEN :inicio AND :fin
-                        AND fr.unidades_micronutrientes IS NOT NULL";
+                        AND fr.unidades_micronutrientes IS NOT NULL
+                        AND fr.unidades_micronutrientes != ''";
         $this->db->query($sqlMicros);
         $this->db->bind(':inicio', $fechaInicio);
         $this->db->bind(':fin',    $fechaFin);
@@ -173,8 +173,9 @@ class FertilizacionService {
 
         $microsPorPredio = [];
         foreach ($microRows as $mr) {
-            $decoded = json_decode($mr->unidades_micronutrientes, true);
-            if (!is_array($decoded)) continue;
+            $raw     = trim($mr->unidades_micronutrientes);
+            $decoded = json_decode($raw, true);
+            if (!is_array($decoded) || count($decoded) === 0) continue;
             $pid = $mr->predio_destino_id;
             if (!isset($microsPorPredio[$pid])) $microsPorPredio[$pid] = [];
             foreach ($decoded as $nombre => $valor) {
@@ -185,6 +186,118 @@ class FertilizacionService {
             $row->micronutrientes = $microsPorPredio[$row->predio_id] ?? [];
         }
         return $rows;
+    }
+
+    // -----------------------------------------------------------------------
+    // COMPARACIÓN PROGRAMA vs APLICADO
+    // -----------------------------------------------------------------------
+
+    /**
+     * Compara lo planificado (programas_fertilizacion) vs lo aplicado
+     * (fertilizaciones_reales) para un predio y temporada dados.
+     * Retorna array con filas por semana: objetivo N/P/K, aplicado N/P/K, desviación %.
+     */
+    public function compararProgramaVsAplicado($predioId, $temporada) {
+        // 1. Obtener programa planificado por semana
+        $sqlPrograma = "SELECT
+                            semana,
+                            fecha_estimada,
+                            n_objetivo,
+                            p_objetivo,
+                            k_objetivo,
+                            micronutrientes_objetivo,
+                            observaciones
+                        FROM programas_fertilizacion
+                        WHERE predio_id = :predio AND temporada = :temporada
+                        ORDER BY semana ASC";
+        $this->db->query($sqlPrograma);
+        $this->db->bind(':predio',    $predioId);
+        $this->db->bind(':temporada', $temporada);
+        $programa = $this->db->resultSet();
+
+        if (empty($programa)) return [];
+
+        // 2. Determinar rango de fechas del programa
+        $fechaMin = $programa[0]->fecha_estimada;
+        $fechaMax = end($programa)->fecha_estimada;
+
+        // 3. Obtener aplicaciones reales agrupadas por semana ISO
+        $sqlAplicado = "SELECT
+                            WEEK(fc.fecha, 1)                           AS semana_iso,
+                            SUM(fr.unidades_n)                          AS real_n,
+                            SUM(fr.unidades_p)                          AS real_p,
+                            SUM(fr.unidades_k)                          AS real_k,
+                            GROUP_CONCAT(
+                                fr.unidades_micronutrientes
+                                ORDER BY fr.id SEPARATOR '|||'
+                            )                                           AS micros_json_list
+                        FROM fertilizaciones_reales fr
+                        JOIN fertilizaciones_cabezal fc ON fr.fertilizacion_cabezal_id = fc.id
+                        WHERE fr.predio_destino_id = :predio
+                          AND fc.fecha BETWEEN :inicio AND :fin
+                        GROUP BY semana_iso
+                        ORDER BY semana_iso ASC";
+        $this->db->query($sqlAplicado);
+        $this->db->bind(':predio',  $predioId);
+        $this->db->bind(':inicio',  $fechaMin);
+        $this->db->bind(':fin',     $fechaMax);
+        $aplicaciones = $this->db->resultSet();
+
+        // Indexar aplicaciones por semana ISO
+        $aplicadoPorSemana = [];
+        foreach ($aplicaciones as $a) {
+            $aplicadoPorSemana[(int)$a->semana_iso] = $a;
+        }
+
+        // 4. Cruzar programa con aplicado
+        $resultado = [];
+        foreach ($programa as $prog) {
+            $semanaIso = (int)date('W', strtotime($prog->fecha_estimada));
+            $aplicado  = $aplicadoPorSemana[$semanaIso] ?? null;
+
+            $realN = $aplicado ? (float)$aplicado->real_n : 0;
+            $realP = $aplicado ? (float)$aplicado->real_p : 0;
+            $realK = $aplicado ? (float)$aplicado->real_k : 0;
+
+            $objN = (float)$prog->n_objetivo;
+            $objP = (float)$prog->p_objetivo;
+            $objK = (float)$prog->k_objetivo;
+
+            // Micronutrientes aplicados: sumar JSONs concatenados
+            $realMicros = [];
+            if ($aplicado && !empty($aplicado->micros_json_list)) {
+                foreach (explode('|||', $aplicado->micros_json_list) as $jsonStr) {
+                    $dec = json_decode(trim($jsonStr), true);
+                    if (!is_array($dec)) continue;
+                    foreach ($dec as $k => $v) {
+                        $realMicros[$k] = ($realMicros[$k] ?? 0) + (float)$v;
+                    }
+                }
+            }
+
+            $resultado[] = [
+                'semana'            => (int)$prog->semana,
+                'fecha_estimada'    => $prog->fecha_estimada,
+                'observaciones'     => $prog->observaciones,
+                // Objetivos
+                'obj_n'             => $objN,
+                'obj_p'             => $objP,
+                'obj_k'             => $objK,
+                'obj_micros'        => $prog->micronutrientes_objetivo
+                                         ? json_decode($prog->micronutrientes_objetivo, true)
+                                         : [],
+                // Aplicado
+                'real_n'            => $realN,
+                'real_p'            => $realP,
+                'real_k'            => $realK,
+                'real_micros'       => $realMicros,
+                // Desviación % (negativo = déficit, positivo = exceso)
+                'dev_n'             => $objN > 0 ? round((($realN - $objN) / $objN) * 100, 1) : null,
+                'dev_p'             => $objP > 0 ? round((($realP - $objP) / $objP) * 100, 1) : null,
+                'dev_k'             => $objK > 0 ? round((($realK - $objK) / $objK) * 100, 1) : null,
+            ];
+        }
+        return $resultado;
     }
 
     public function obtenerDetalleDistribucion($cabezalId) {
@@ -200,6 +313,21 @@ class FertilizacionService {
                 ? json_decode($row->unidades_micronutrientes, true) : [];
         }
         return $rows;
+    }
+
+    // -----------------------------------------------------------------------
+    // GENERACIÓN DE TOKEN PÚBLICO
+    // -----------------------------------------------------------------------
+
+    public function generarTokenReporte($usuarioId) {
+        $token = bin2hex(random_bytes(24));
+        $expiry = date('Y-m-d H:i:s', strtotime('+7 days'));
+        $this->db->query('INSERT INTO reportes_publicos (usuario_id, token, expiracion) VALUES (:uid, :tok, :exp)
+                          ON DUPLICATE KEY UPDATE token = :tok, expiracion = :exp');
+        $this->db->bind(':uid', $usuarioId);
+        $this->db->bind(':tok', $token);
+        $this->db->bind(':exp', $expiry);
+        return $this->db->execute() ? $token : false;
     }
 
     // -----------------------------------------------------------------------
@@ -256,27 +384,41 @@ class FertilizacionService {
         return $this->db->single();
     }
 
+    /**
+     * Crea un registro en fertilizaciones_reales calculando unidades N/P/K
+     * y micronutrientes desde la composición del fertilizante.
+     *
+     * FIX: Normaliza micronutrientes vacíos a NULL para evitar que json_decode
+     * falle silenciosamente en el reporte nutricional.
+     */
     private function crearRegistroReal($cabezalId, $predioDestinoId, $cantidadNominal, $infoFert) {
         $masaEfectiva = $cantidadNominal;
         if ($infoFert->tipo_unidad === 'lt') {
-            $densidad     = ($infoFert->densidad > 0) ? (float)$infoFert->densidad : 1.0;
+            $densidad     = ((float)($infoFert->densidad ?? 0) > 0) ? (float)$infoFert->densidad : 1.0;
             $masaEfectiva = $cantidadNominal * $densidad;
         }
         $n = ($masaEfectiva * ((float)($infoFert->porcentaje_n ?? 0))) / 100;
         $p = ($masaEfectiva * ((float)($infoFert->porcentaje_p ?? 0))) / 100;
         $k = ($masaEfectiva * ((float)($infoFert->porcentaje_k ?? 0))) / 100;
 
+        // --- FIX micronutrientes ---
+        // Normalizar campo: si es null, vacío o whitespace, no guardar JSON.
         $unidades_micros = null;
-        if (!empty($infoFert->micronutrientes)) {
-            $micros = json_decode($infoFert->micronutrientes, true);
+        $rawMicro = trim($infoFert->micronutrientes ?? '');
+        if ($rawMicro !== '' && $rawMicro !== '{}' && $rawMicro !== '[]' && $rawMicro !== 'null') {
+            $micros = json_decode($rawMicro, true);
             if (is_array($micros) && count($micros) > 0) {
                 $resultado = [];
                 foreach ($micros as $nombre => $pct) {
-                    $resultado[$nombre] = round(($masaEfectiva * (float)$pct) / 100, 4);
+                    $valor = round(($masaEfectiva * (float)$pct) / 100, 4);
+                    if ($valor > 0) $resultado[$nombre] = $valor;
                 }
-                $unidades_micros = json_encode($resultado, JSON_UNESCAPED_UNICODE);
+                if (count($resultado) > 0) {
+                    $unidades_micros = json_encode($resultado, JSON_UNESCAPED_UNICODE);
+                }
             }
         }
+        // --- FIN FIX ---
 
         $sql = "INSERT INTO fertilizaciones_reales
                     (fertilizacion_cabezal_id, predio_destino_id, cantidad_recibida,
