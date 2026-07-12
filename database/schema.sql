@@ -1,7 +1,8 @@
 -- =============================================================
 -- ABONO TRACK — Schema SQL MVP Final
--- Versión: 1.0.0
+-- Versión: 1.1.0
 -- Alcance: gestión de fertilización, predios, programas y comparación
+-- Cambios v1.1.0: columna `estado` en programa_fertilizacion
 -- =============================================================
 
 SET NAMES 'utf8mb4';
@@ -126,6 +127,9 @@ CREATE TABLE IF NOT EXISTS `programa_fertilizacion` (
   `predio_id` INT UNSIGNED NOT NULL,
   `cultivo_id` INT UNSIGNED DEFAULT NULL,
   `temporada` VARCHAR(9) NOT NULL COMMENT 'Ej: 2025 o 2025/2026',
+  -- Estado del programa: activo = se usa en reportes; archivado = cerrado, no influye en alertas;
+  -- borrador = en preparación, tampoco influye en reportes.
+  `estado` ENUM('activo','archivado','borrador') NOT NULL DEFAULT 'activo' COMMENT 'activo=visible en reportes, archivado=cerrado, borrador=en preparación',
   `semana` TINYINT UNSIGNED NOT NULL DEFAULT 1,
   `fecha_estimada` DATE NOT NULL,
   `n_objetivo` DECIMAL(8,3) UNSIGNED NOT NULL DEFAULT 0,
@@ -141,7 +145,19 @@ CREATE TABLE IF NOT EXISTS `programa_fertilizacion` (
   INDEX `idx_pf_predio` (`predio_id`),
   INDEX `idx_pf_temporada` (`temporada`),
   INDEX `idx_pf_fecha` (`fecha_estimada`),
+  INDEX `idx_pf_estado` (`estado`),
   CONSTRAINT `fk_pf_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios`(`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_pf_predio` FOREIGN KEY (`predio_id`) REFERENCES `predios`(`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_pf_cultivo` FOREIGN KEY (`cultivo_id`) REFERENCES `cultivos`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Programa semanal de fertilización NPK por predio y temporada';
+
+-- ================================================================
+-- SCRIPT DE MIGRACIÓN PARA INSTALACIONES EXISTENTES (v1.0 → v1.1)
+-- Ejecutar manualmente si la tabla ya existe en producción:
+-- ================================================================
+-- ALTER TABLE `programa_fertilizacion`
+--   ADD COLUMN `estado` ENUM('activo','archivado','borrador')
+--     NOT NULL DEFAULT 'activo'
+--     COMMENT 'activo=visible en reportes, archivado=cerrado, borrador=en preparación'
+--     AFTER `temporada`,
+--   ADD INDEX `idx_pf_estado` (`estado`);

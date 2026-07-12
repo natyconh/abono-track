@@ -401,16 +401,14 @@ class FertilizacionController extends Controller {
             $inicioTemporada, date('Y-m-d')
         );
 
-        // Cargar objetivos acumulados del programa de temporada activo
-        // para mostrar alertas de atraso por predio
+        // Cargar objetivos acumulados SOLO de programas con estado = 'activo'.
+        // No se filtra por temporada hardcodeada: se usa lo que el usuario haya dejado activo.
         $objetivosPorPredio = [];
         try {
             require_once APP_ROOT . '/models/ProgramaFertilizacionModel.php';
-            $programaModel = new ProgramaFertilizacionModel($this->db, $this->usuario_id);
-            $temporada     = date('n') >= 9 ? date('Y') : (date('Y') - 1);
-            $objetivosPorPredio = $programaModel->obtenerObjetivosAcumuladosPorPredio((string)$temporada);
+            $programaModel      = new ProgramaFertilizacionModel($this->db, $this->usuario_id);
+            $objetivosPorPredio = $programaModel->obtenerObjetivosAcumuladosPorPredio(null);
         } catch (Exception $e) {
-            // Si el método no existe aún, el reporte sigue funcionando sin alertas
             $objetivosPorPredio = [];
         }
 

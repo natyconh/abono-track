@@ -181,6 +181,36 @@ class ProgramaController extends Controller {
     }
 
     // -----------------------------------------------------------------------
+    // CAMBIAR ESTADO (archivar / reactivar)
+    // POST /programa/cambiarEstado
+    // -----------------------------------------------------------------------
+    public function cambiarEstado() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { $this->redirect('programa'); }
+
+        $predioId    = intval(trim($_POST['predio_id']    ?? 0));
+        $temporada   = trim($_POST['temporada']           ?? '');
+        $nuevoEstado = trim($_POST['nuevo_estado']        ?? '');
+
+        $permitidos = ['activo', 'archivado', 'borrador'];
+        if (!$predioId || !$temporada || !in_array($nuevoEstado, $permitidos)) {
+            SessionHelper::setFlash('Parámetros inválidos para cambiar el estado.', 'danger');
+            $this->redirect('programa');
+            return;
+        }
+
+        if ($this->programaModel->cambiarEstado($predioId, $temporada, $nuevoEstado)) {
+            $etiquetas = ['activo' => 'reactivado', 'archivado' => 'archivado', 'borrador' => 'marcado como borrador'];
+            SessionHelper::setFlash(
+                'Programa Temp. ' . htmlspecialchars($temporada) . ' ' . $etiquetas[$nuevoEstado] . ' correctamente.',
+                'success'
+            );
+        } else {
+            SessionHelper::setFlash('No se pudo cambiar el estado del programa.', 'danger');
+        }
+        $this->redirect('programa');
+    }
+
+    // -----------------------------------------------------------------------
     // COMPARAR
     // -----------------------------------------------------------------------
     public function comparar($predioId = null) {
@@ -194,7 +224,6 @@ class ProgramaController extends Controller {
         if (!$predioId && !empty($predios)) {
             $resumen = $this->programaModel->listarResumen();
             if (!empty($resumen)) {
-                // Buscar el primer resumen cuyo predio_id esté en predios reales
                 $predioIdsReales = array_column($predios, 'id');
                 foreach ($resumen as $r) {
                     if (in_array($r->predio_id, $predioIdsReales)) {

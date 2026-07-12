@@ -42,6 +42,7 @@
                     <tr>
                         <th>Predio</th>
                         <th>Temporada</th>
+                        <th class="text-center">Estado</th>
                         <th class="text-center">Semanas</th>
                         <th>Período</th>
                         <th class="text-end">N Total</th>
@@ -51,21 +52,46 @@
                     </tr>
                 </thead>
                 <tbody>
-                <?php foreach ($data['resumen'] as $r): ?>
-                    <tr>
+                <?php foreach ($data['resumen'] as $r):
+                    $estado     = $r->estado ?? 'activo';
+                    $esArchivado = $estado === 'archivado';
+                    $esBorrador  = $estado === 'borrador';
+                ?>
+                    <tr class="<?php echo $esArchivado ? 'text-muted' : ''; ?>">
                         <td class="fw-semibold"><?php echo htmlspecialchars($r->predio); ?></td>
                         <td>
                             <span class="badge" style="background:#e8f5e9;color:#1a6b3c;">
                                 Temp. <?php echo htmlspecialchars($r->temporada); ?>
                             </span>
                         </td>
+                        <td class="text-center">
+                            <?php if ($esArchivado): ?>
+                                <span class="badge bg-secondary" title="No se usa en el Reporte Nutricional">
+                                    <i class="bi bi-archive"></i> Archivado
+                                </span>
+                            <?php elseif ($esBorrador): ?>
+                                <span class="badge bg-warning text-dark" title="Borrador — aún no influye en reportes">
+                                    <i class="bi bi-pencil-square"></i> Borrador
+                                </span>
+                            <?php else: ?>
+                                <span class="badge bg-success" title="Se incluye en el Reporte Nutricional">
+                                    <i class="bi bi-check-circle"></i> Activo
+                                </span>
+                            <?php endif; ?>
+                        </td>
                         <td class="text-center"><?php echo $r->total_semanas; ?></td>
                         <td class="text-muted small">
                             <?php echo date('d/m/Y', strtotime($r->inicio)); ?> — <?php echo date('d/m/Y', strtotime($r->fin)); ?>
                         </td>
-                        <td class="text-end" style="color:#1565c0;font-weight:600;"><?php echo number_format($r->total_n, 1); ?></td>
-                        <td class="text-end" style="color:#e65100;font-weight:600;"><?php echo number_format($r->total_p, 1); ?></td>
-                        <td class="text-end" style="color:#b71c1c;font-weight:600;"><?php echo number_format($r->total_k, 1); ?></td>
+                        <td class="text-end <?php echo $esArchivado ? '' : 'fw-semibold'; ?>" style="color:<?php echo $esArchivado ? '#999' : '#1565c0'; ?>;">
+                            <?php echo number_format($r->total_n, 1); ?>
+                        </td>
+                        <td class="text-end <?php echo $esArchivado ? '' : 'fw-semibold'; ?>" style="color:<?php echo $esArchivado ? '#999' : '#e65100'; ?>;">
+                            <?php echo number_format($r->total_p, 1); ?>
+                        </td>
+                        <td class="text-end <?php echo $esArchivado ? '' : 'fw-semibold'; ?>" style="color:<?php echo $esArchivado ? '#999' : '#b71c1c'; ?>;">
+                            <?php echo number_format($r->total_k, 1); ?>
+                        </td>
                         <td class="text-center">
                             <!-- Editar -->
                             <a href="<?php echo URL_ROOT; ?>/programa/edit/<?php echo $r->predio_id; ?>?temporada=<?php echo urlencode($r->temporada); ?>"
@@ -82,9 +108,31 @@
                                class="btn btn-sm btn-outline-success me-1" title="Exportar CSV">
                                 <i class="bi bi-file-earmark-spreadsheet"></i>
                             </a>
+                            <!-- Archivar / Reactivar -->
+                            <?php if ($esArchivado): ?>
+                            <form method="POST" action="<?php echo URL_ROOT; ?>/programa/cambiarEstado" class="d-inline"
+                                  onsubmit="return confirm('¿Reactivar el programa Temp. <?php echo htmlspecialchars($r->temporada); ?> para <?php echo htmlspecialchars($r->predio); ?>? Volverá a usarse en el Reporte Nutricional.');">
+                                <input type="hidden" name="predio_id"    value="<?php echo $r->predio_id; ?>">
+                                <input type="hidden" name="temporada"    value="<?php echo htmlspecialchars($r->temporada); ?>">
+                                <input type="hidden" name="nuevo_estado" value="activo">
+                                <button type="submit" class="btn btn-sm btn-outline-success me-1" title="Reactivar programa">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                </button>
+                            </form>
+                            <?php else: ?>
+                            <form method="POST" action="<?php echo URL_ROOT; ?>/programa/cambiarEstado" class="d-inline"
+                                  onsubmit="return confirm('¿Archivar el programa Temp. <?php echo htmlspecialchars($r->temporada); ?> para <?php echo htmlspecialchars($r->predio); ?>? Ya no se considerará en el Reporte Nutricional.');">
+                                <input type="hidden" name="predio_id"    value="<?php echo $r->predio_id; ?>">
+                                <input type="hidden" name="temporada"    value="<?php echo htmlspecialchars($r->temporada); ?>">
+                                <input type="hidden" name="nuevo_estado" value="archivado">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary me-1" title="Archivar programa">
+                                    <i class="bi bi-archive"></i>
+                                </button>
+                            </form>
+                            <?php endif; ?>
                             <!-- Eliminar -->
                             <form method="POST" action="<?php echo URL_ROOT; ?>/programa/eliminar" class="d-inline"
-                                  onsubmit="return confirm('\u00bfEliminar todo el programa de temporada <?php echo htmlspecialchars($r->temporada); ?> para <?php echo htmlspecialchars($r->predio); ?>?');">
+                                  onsubmit="return confirm('¿Eliminar todo el programa de temporada <?php echo htmlspecialchars($r->temporada); ?> para <?php echo htmlspecialchars($r->predio); ?>?');">
                                 <input type="hidden" name="predio_id" value="<?php echo $r->predio_id; ?>">
                                 <input type="hidden" name="temporada" value="<?php echo htmlspecialchars($r->temporada); ?>">
                                 <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar programa">
