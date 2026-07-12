@@ -193,8 +193,17 @@ class FertilizacionService {
     // -----------------------------------------------------------------------
 
     /**
-     * Compara lo planificado (programas_fertilizacion) vs lo aplicado
+     * Compara lo planificado (programa_fertilizacion) vs lo aplicado
      * (fertilizaciones_reales) para un predio y temporada dados.
+     *
+     * FIX: El cruce se hace por ventana de fechas en lugar de semana ISO.
+     * - Se amplía el rango ±7 días respecto a los extremos del programa para
+     *   capturar aplicaciones registradas ligeramente fuera del rango exacto.
+     * - Cada aplicación se asigna a la semana cuya ventana
+     *   [fecha_estimada_semana_i .. fecha_estimada_semana_{i+1} - 1 día] la contiene.
+     * - Se elimina la dependencia de WEEK(fecha,1) que causaba desfases entre
+     *   la semana ISO del año y la semana lógica de la temporada agrícola.
+     *
      * Retorna array con filas por semana: objetivo N/P/K, aplicado N/P/K, desviación %.
      */
     public function compararProgramaVsAplicado($predioId, $temporada) {
@@ -217,84 +226,95 @@ class FertilizacionService {
 
         if (empty($programa)) return [];
 
-        // 2. Determinar rango de fechas del programa
-        $fechaMin = $programa[0]->fecha_estimada;
-        $fechaMax = end($programa)->fecha_estimada;
+        // 2. Determinar rango de fechas ampliado (±7 días en extremos)
+        $fechaMin          = $programa[0]->fecha_estimada;
+        $fechaMax          = end($programa)->fecha_estimada;
+        $fechaMinExtendida = date('Y-m-d', strtotime($fechaMin . ' -7 days'));
+        $fechaMaxExtendida = date('Y-m-d', strtotime($fechaMax . ' +7 days'));
 
-        // 3. Obtener aplicaciones reales agrupadas por semana ISO
+        // 3. Obtener TODAS las aplicaciones del predio en el rango ampliado,
+        //    agrupadas por fecha exacta (no por semana ISO)
         $sqlAplicado = "SELECT
-                            WEEK(fc.fecha, 1)                           AS semana_iso,
-                            SUM(fr.unidades_n)                          AS real_n,
-                            SUM(fr.unidades_p)                          AS real_p,
-                            SUM(fr.unidades_k)                          AS real_k,
+                            fc.fecha,
+                            SUM(fr.unidades_n)  AS real_n,
+                            SUM(fr.unidades_p)  AS real_p,
+                            SUM(fr.unidades_k)  AS real_k,
                             GROUP_CONCAT(
                                 fr.unidades_micronutrientes
                                 ORDER BY fr.id SEPARATOR '|||'
-                            )                                           AS micros_json_list
+                            )                   AS micros_json_list
                         FROM fertilizaciones_reales fr
                         JOIN fertilizaciones_cabezal fc ON fr.fertilizacion_cabezal_id = fc.id
                         WHERE fr.predio_destino_id = :predio
                           AND fc.fecha BETWEEN :inicio AND :fin
-                        GROUP BY semana_iso
-                        ORDER BY semana_iso ASC";
+                        GROUP BY fc.fecha
+                        ORDER BY fc.fecha ASC";
         $this->db->query($sqlAplicado);
         $this->db->bind(':predio',  $predioId);
-        $this->db->bind(':inicio',  $fechaMin);
-        $this->db->bind(':fin',     $fechaMax);
+        $this->db->bind(':inicio',  $fechaMinExtendida);
+        $this->db->bind(':fin',     $fechaMaxExtendida);
         $aplicaciones = $this->db->resultSet();
 
-        // Indexar aplicaciones por semana ISO
-        $aplicadoPorSemana = [];
-        foreach ($aplicaciones as $a) {
-            $aplicadoPorSemana[(int)$a->semana_iso] = $a;
-        }
-
-        // 4. Cruzar programa con aplicado
+        // 4. Cruzar programa con aplicado por ventana de fechas.
+        //    La ventana de la semana i va desde su fecha_estimada hasta
+        //    el día anterior a la fecha_estimada de la semana i+1.
+        //    La última semana cierra en fechaMaxExtendida.
         $resultado = [];
-        foreach ($programa as $prog) {
-            $semanaIso = (int)date('W', strtotime($prog->fecha_estimada));
-            $aplicado  = $aplicadoPorSemana[$semanaIso] ?? null;
+        $totalSemanas = count($programa);
 
-            $realN = $aplicado ? (float)$aplicado->real_n : 0;
-            $realP = $aplicado ? (float)$aplicado->real_p : 0;
-            $realK = $aplicado ? (float)$aplicado->real_k : 0;
+        foreach ($programa as $i => $prog) {
+            $ventanaDesde = $prog->fecha_estimada;
+            $ventanaHasta = ($i + 1 < $totalSemanas)
+                ? date('Y-m-d', strtotime($programa[$i + 1]->fecha_estimada . ' -1 day'))
+                : $fechaMaxExtendida;
+
+            $realN      = 0.0;
+            $realP      = 0.0;
+            $realK      = 0.0;
+            $realMicros = [];
+
+            foreach ($aplicaciones as $a) {
+                if ($a->fecha >= $ventanaDesde && $a->fecha <= $ventanaHasta) {
+                    $realN += (float)$a->real_n;
+                    $realP += (float)$a->real_p;
+                    $realK += (float)$a->real_k;
+
+                    if (!empty($a->micros_json_list)) {
+                        foreach (explode('|||', $a->micros_json_list) as $jsonStr) {
+                            $dec = json_decode(trim($jsonStr), true);
+                            if (!is_array($dec)) continue;
+                            foreach ($dec as $k => $v) {
+                                $realMicros[$k] = ($realMicros[$k] ?? 0) + (float)$v;
+                            }
+                        }
+                    }
+                }
+            }
 
             $objN = (float)$prog->n_objetivo;
             $objP = (float)$prog->p_objetivo;
             $objK = (float)$prog->k_objetivo;
 
-            // Micronutrientes aplicados: sumar JSONs concatenados
-            $realMicros = [];
-            if ($aplicado && !empty($aplicado->micros_json_list)) {
-                foreach (explode('|||', $aplicado->micros_json_list) as $jsonStr) {
-                    $dec = json_decode(trim($jsonStr), true);
-                    if (!is_array($dec)) continue;
-                    foreach ($dec as $k => $v) {
-                        $realMicros[$k] = ($realMicros[$k] ?? 0) + (float)$v;
-                    }
-                }
-            }
-
             $resultado[] = [
-                'semana'            => (int)$prog->semana,
-                'fecha_estimada'    => $prog->fecha_estimada,
-                'observaciones'     => $prog->observaciones,
+                'semana'         => (int)$prog->semana,
+                'fecha_estimada' => $prog->fecha_estimada,
+                'observaciones'  => $prog->observaciones,
                 // Objetivos
-                'obj_n'             => $objN,
-                'obj_p'             => $objP,
-                'obj_k'             => $objK,
-                'obj_micros'        => $prog->micronutrientes_objetivo
-                                         ? json_decode($prog->micronutrientes_objetivo, true)
-                                         : [],
+                'obj_n'          => $objN,
+                'obj_p'          => $objP,
+                'obj_k'          => $objK,
+                'obj_micros'     => $prog->micronutrientes_objetivo
+                                      ? json_decode($prog->micronutrientes_objetivo, true)
+                                      : [],
                 // Aplicado
-                'real_n'            => $realN,
-                'real_p'            => $realP,
-                'real_k'            => $realK,
-                'real_micros'       => $realMicros,
+                'real_n'         => $realN,
+                'real_p'         => $realP,
+                'real_k'         => $realK,
+                'real_micros'    => $realMicros,
                 // Desviación % (negativo = déficit, positivo = exceso)
-                'dev_n'             => $objN > 0 ? round((($realN - $objN) / $objN) * 100, 1) : null,
-                'dev_p'             => $objP > 0 ? round((($realP - $objP) / $objP) * 100, 1) : null,
-                'dev_k'             => $objK > 0 ? round((($realK - $objK) / $objK) * 100, 1) : null,
+                'dev_n'          => $objN > 0 ? round((($realN - $objN) / $objN) * 100, 1) : null,
+                'dev_p'          => $objP > 0 ? round((($realP - $objP) / $objP) * 100, 1) : null,
+                'dev_k'          => $objK > 0 ? round((($realK - $objK) / $objK) * 100, 1) : null,
             ];
         }
         return $resultado;
