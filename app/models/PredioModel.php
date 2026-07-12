@@ -66,6 +66,53 @@ class PredioModel {
         return $this->db->resultSet();
     }
 
+    /**
+     * Obtiene todos los predios activos del usuario junto con sus
+     * distribuciones hidráulicas configuradas (para Config. Hidráulica).
+     * Cada predio devuelto tiene una propiedad ->distribuciones (array).
+     */
+    public function obtenerTodosConDistribuciones() {
+        // 1. Todos los predios activos del usuario
+        $sql = "SELECT p.*, c.nombre AS nombre_cultivo
+                FROM predios p
+                LEFT JOIN cultivos c ON p.cultivo_id = c.id
+                WHERE p.usuario_id = :usuario_id
+                  AND p.activo = 1
+                ORDER BY p.tipo_superficie DESC, p.nombre ASC";
+        $this->db->query($sql);
+        $this->db->bind(':usuario_id', $this->usuario_id);
+        $predios = $this->db->resultSet();
+
+        if (empty($predios)) return [];
+
+        // 2. Todas las distribuciones del usuario en una sola consulta
+        $sql = "SELECT cdr.id,
+                       cdr.predio_origen_id,
+                       cdr.predio_destino_id,
+                       cdr.porcentaje_flujo,
+                       pd.nombre AS nombre_destino
+                FROM config_distribucion_riego cdr
+                JOIN predios pd ON cdr.predio_destino_id = pd.id
+                WHERE cdr.usuario_id = :usuario_id
+                ORDER BY cdr.predio_origen_id ASC, cdr.porcentaje_flujo DESC";
+        $this->db->query($sql);
+        $this->db->bind(':usuario_id', $this->usuario_id);
+        $distribuciones = $this->db->resultSet();
+
+        // 3. Indexar distribuciones por predio_origen_id
+        $distPorOrigen = [];
+        foreach ($distribuciones as $d) {
+            $distPorOrigen[$d->predio_origen_id][] = $d;
+        }
+
+        // 4. Inyectar distribuciones en cada predio
+        foreach ($predios as $predio) {
+            $predio->distribuciones = $distPorOrigen[$predio->id] ?? [];
+        }
+
+        return $predios;
+    }
+
     public function obtenerPredioPorId($id) {
         $sql = "SELECT * FROM predios WHERE id = :id AND usuario_id = :usuario_id";
         $this->db->query($sql);
