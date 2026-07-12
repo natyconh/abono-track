@@ -22,7 +22,7 @@ $cp = $_GET['url'] ?? 'home/index';
             <div class="text-white-50 small text-uppercase fw-bold mb-2 ps-3" style="font-size: 0.7rem; letter-spacing: 1px;">Catálogos</div>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo (strpos($cp, 'fertilizante') === 0) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/fertilizante">
+                <a class="nav-link <?php echo (strpos($cp, 'fertilizante') === 0 && strpos($cp, 'fertilizacion') === false) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/fertilizante">
                     <i class="bi bi-bucket-fill"></i> Fertilizantes
                 </a>
             </li>
@@ -50,7 +50,7 @@ $cp = $_GET['url'] ?? 'home/index';
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo (strpos($cp, 'fertilizacion') === 0) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/fertilizacion">
+                <a class="nav-link <?php echo (strpos($cp, 'fertilizacion') === 0 && strpos($cp, 'fertilizacion/reporteNutricional') === false) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/fertilizacion">
                     <i class="bi bi-eyedropper"></i> Fertirrigación
                 </a>
             </li>
