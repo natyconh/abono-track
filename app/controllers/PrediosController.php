@@ -17,7 +17,8 @@ class PrediosController extends Controller {
     public function index() {
         $data = [
             'titulo'      => 'Administración de Predios — Abono Track',
-            'predios'     => $this->predioModel->obtenerPrediosAgricolas(),
+            // obtenerTodosLosPredios incluye cultivos Y cabezales de riego
+            'predios'     => $this->predioModel->obtenerTodosLosPredios(),
             'breadcrumbs' => [
                 ['label' => 'Predios'],
             ],
