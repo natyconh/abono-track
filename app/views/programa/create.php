@@ -23,7 +23,7 @@
         <h1 class="h3 fw-bold mb-0" style="color:#1a6b3c;">Nuevo Programa de Fertilización</h1>
     </div>
 
-    <?php SessionHelper::showFlash(); ?>
+    <?php SessionHelper::displayFlash(); ?>
 
     <form method="POST" action="<?php echo URL_ROOT; ?>/programa/store" id="formPrograma">
 

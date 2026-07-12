@@ -36,7 +36,7 @@
     </div>
 
     <!-- Flash -->
-    <?php SessionHelper::showFlash(); ?>
+    <?php SessionHelper::displayFlash(); ?>
 
     <!-- Tabla resumen de programas -->
     <?php if (empty($data['resumen'])): ?>
