@@ -1,6 +1,6 @@
 -- =============================================================
 -- ABONO TRACK — Schema SQL MVP (Ajustado)
--- Versión: 0.1.1
+-- Versión: 0.2.0
 -- Sin multitenancy, sin roles, sin sectores.
 -- =============================================================
 
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS `predios` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -------------------------------------------------------------
--- 5. CONFIGURACIÓN DE DISTRIBUCIÓN DE RIEGO (Corregido para NPK)
+-- 5. CONFIGURACIÓN DE DISTRIBUCIÓN DE RIEGO
 -- -------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `config_distribucion_riego` (
     `id`                 INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS `config_distribucion_riego` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -------------------------------------------------------------
--- 6. REGISTROS DE RIEGO DIARIO (Sin exclusiones)
+-- 6. REGISTROS DE RIEGO DIARIO
 -- -------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `registros_riegos` (
     `id`              INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -129,9 +129,9 @@ CREATE TABLE IF NOT EXISTS `fertilizaciones_cabezal` (
     `cantidad_aplicada` DECIMAL(10,2) NOT NULL,
     `fecha_registro`    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
-    CONSTRAINT `fk_fert_cab_predio` FOREIGN KEY (`predio_cabezal_id`) REFERENCES `predios`(`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_fert_cab_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios`(`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_fert_cab_fert` FOREIGN KEY (`fertilizante_id`) REFERENCES `fertilizantes`(`id`) ON DELETE CASCADE
+    CONSTRAINT `fk_fert_cab_predio`   FOREIGN KEY (`predio_cabezal_id`) REFERENCES `predios`(`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_fert_cab_usuario`  FOREIGN KEY (`usuario_id`) REFERENCES `usuarios`(`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_fert_cab_fert`     FOREIGN KEY (`fertilizante_id`) REFERENCES `fertilizantes`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `fertilizaciones_reales` (
@@ -144,6 +144,36 @@ CREATE TABLE IF NOT EXISTS `fertilizaciones_reales` (
     `unidades_k`               DECIMAL(10,4) NOT NULL DEFAULT 0,
     `unidades_micronutrientes` JSON DEFAULT NULL,
     PRIMARY KEY (`id`),
-    CONSTRAINT `fk_fert_real_cab` FOREIGN KEY (`fertilizacion_cabezal_id`) REFERENCES `fertilizaciones_cabezal`(`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_fert_real_cab`    FOREIGN KEY (`fertilizacion_cabezal_id`) REFERENCES `fertilizaciones_cabezal`(`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_fert_real_predio` FOREIGN KEY (`predio_destino_id`) REFERENCES `predios`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -------------------------------------------------------------
+-- 8. PROGRAMA DE FERTILIZACIÓN (Planificación NPK por temporada)
+-- -------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `programa_fertilizacion` (
+    `id`                         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `usuario_id`                 INT UNSIGNED NOT NULL,
+    `predio_id`                  INT UNSIGNED NOT NULL,
+    `cultivo_id`                 INT UNSIGNED DEFAULT NULL,
+    `temporada`                  VARCHAR(9)   NOT NULL COMMENT 'Ej: 2025 o 2025/2026',
+    `semana`                     TINYINT UNSIGNED NOT NULL DEFAULT 1,
+    `fecha_estimada`             DATE NOT NULL,
+    `n_objetivo`                 DECIMAL(8,3) UNSIGNED NOT NULL DEFAULT 0,
+    `p_objetivo`                 DECIMAL(8,3) UNSIGNED NOT NULL DEFAULT 0,
+    `k_objetivo`                 DECIMAL(8,3) UNSIGNED NOT NULL DEFAULT 0,
+    `micronutrientes_objetivo`   JSON DEFAULT NULL,
+    `observaciones`              TEXT DEFAULT NULL,
+    `created_at`                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uq_programa_predio_temporada_semana` (`predio_id`, `temporada`, `semana`),
+    INDEX `idx_pf_usuario`   (`usuario_id`),
+    INDEX `idx_pf_predio`    (`predio_id`),
+    INDEX `idx_pf_temporada` (`temporada`),
+    INDEX `idx_pf_fecha`     (`fecha_estimada`),
+    CONSTRAINT `fk_pf_usuario`  FOREIGN KEY (`usuario_id`) REFERENCES `usuarios`(`id`)  ON DELETE CASCADE,
+    CONSTRAINT `fk_pf_predio`   FOREIGN KEY (`predio_id`)  REFERENCES `predios`(`id`)   ON DELETE CASCADE,
+    CONSTRAINT `fk_pf_cultivo`  FOREIGN KEY (`cultivo_id`) REFERENCES `cultivos`(`id`)  ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='Programa semanal de fertilización NPK por predio y temporada';
