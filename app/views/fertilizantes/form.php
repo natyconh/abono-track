@@ -1,7 +1,11 @@
+<?php
+// _legacy/abono-track/app/views/fertilizantes/form.php
+// Formulario crear/editar producto fertilizante — igual al de Ryzoma, sin empresa_id
+?>
 <div class="container-fluid mt-4">
     <div class="row justify-content-center">
         <div class="col-md-8 col-lg-6">
-            
+
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <a href="<?php echo URL_ROOT; ?>/fertilizante" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-arrow-left"></i> Volver
@@ -12,14 +16,14 @@
             <div class="card shadow-sm border-0">
                 <div class="card-body p-4">
                     <form action="<?php echo URL_ROOT; ?>/fertilizante/guardar" method="POST">
-                        
+
                         <input type="hidden" name="id" value="<?php echo $data['producto']->id; ?>">
 
-                        <!-- Datos Básicos -->
+                        <!-- Identificación -->
                         <h6 class="text-primary-dark-green fw-bold mb-3"><i class="bi bi-tag-fill me-2"></i>Identificación</h6>
                         <div class="mb-3">
                             <label for="nombre_comercial" class="form-label">Nombre Comercial <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control form-control-lg" id="nombre_comercial" name="nombre_comercial" 
+                            <input type="text" class="form-control form-control-lg" id="nombre_comercial" name="nombre_comercial"
                                    value="<?php echo htmlspecialchars($data['producto']->nombre_comercial); ?>" placeholder="Ej: Ultrasol K Plus" required>
                         </div>
 
@@ -27,23 +31,23 @@
                             <div class="col-md-6">
                                 <label for="tipo_producto" class="form-label">Tipo de Producto</label>
                                 <select class="form-select" id="tipo_producto" name="tipo_producto">
-                                <?php $tipos = ['fertilizante' => 'Fertilizante NPK', 'biostimulante' => 'Biostimulante', 'enmienda' => 'Enmienda', 'otro' => 'Otro']; ?>
-                                <?php foreach($tipos as $val => $label): ?>
-                                    <option value="<?php echo $val; ?>" <?php echo ($data['producto']->tipo_producto == $val) ? 'selected' : ''; ?>>
-                                        <?php echo $label; ?>
-                                    </option>
-                                <?php endforeach; ?>
+                                    <?php $tipos = ['fertilizante' => 'Fertilizante NPK', 'biostimulante' => 'Biostimulante', 'enmienda' => 'Enmienda', 'otro' => 'Otro']; ?>
+                                    <?php foreach($tipos as $val => $label): ?>
+                                        <option value="<?php echo $val; ?>" <?php echo ($data['producto']->tipo_producto == $val) ? 'selected' : ''; ?>>
+                                            <?php echo $label; ?>
+                                        </option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label for="tipo_unidad" class="form-label">Unidad de Medida</label>
+                                <label class="form-label">Unidad de Medida</label>
                                 <div class="btn-group w-100" role="group">
-                                    <input type="radio" class="btn-check" name="tipo_unidad" id="unidad_kg" value="kg" 
+                                    <input type="radio" class="btn-check" name="tipo_unidad" id="unidad_kg" value="kg"
                                         onclick="toggleDensidad(false)"
                                         <?php echo ($data['producto']->tipo_unidad == 'kg') ? 'checked' : ''; ?>>
                                     <label class="btn btn-outline-primary" for="unidad_kg">Kilos (kg)</label>
 
-                                    <input type="radio" class="btn-check" name="tipo_unidad" id="unidad_lt" value="lt" 
+                                    <input type="radio" class="btn-check" name="tipo_unidad" id="unidad_lt" value="lt"
                                         onclick="toggleDensidad(true)"
                                         <?php echo ($data['producto']->tipo_unidad == 'lt') ? 'checked' : ''; ?>>
                                     <label class="btn btn-outline-primary" for="unidad_lt">Litros (Lt)</label>
@@ -51,14 +55,14 @@
                             </div>
                         </div>
 
-                        <!-- CAMPO DE DENSIDAD -->
+                        <!-- Densidad (solo si Litros) -->
                         <div id="bloque_densidad" class="mb-4 bg-info bg-opacity-10 p-3 rounded border border-info" style="display: none;">
                             <label for="densidad" class="form-label fw-bold text-primary-dark-green">
                                 <i class="bi bi-droplet-half me-2"></i>Densidad (Gravedad Específica)
                             </label>
                             <div class="input-group">
-                                <input type="number" step="0.001" class="form-control" id="densidad" name="densidad" 
-                                    value="<?php echo ($data['producto']->densidad > 0) ? $data['producto']->densidad : '1.000'; ?>" 
+                                <input type="number" step="0.001" class="form-control" id="densidad" name="densidad"
+                                    value="<?php echo ($data['producto']->densidad > 0) ? $data['producto']->densidad : '1.000'; ?>"
                                     placeholder="Ej: 1.25">
                                 <span class="input-group-text">kg/lt</span>
                             </div>
@@ -69,7 +73,6 @@
 
                         <!-- Composición NPK -->
                         <h6 class="text-primary-dark-green fw-bold mb-3"><i class="bi bi-eyedropper me-2"></i>Composición NPK (0 si no aplica)</h6>
-                        
                         <div class="row g-3 mb-4">
                             <div class="col-4">
                                 <label class="form-label fw-bold text-muted">Nitrógeno (N)</label>
@@ -113,12 +116,12 @@
                                     <?php foreach ($data['producto']->micronutrientes_array as $nombre => $porcentaje): ?>
                                     <div class="row g-2 mb-2 fila-micro">
                                         <div class="col-7">
-                                            <input type="text" class="form-control form-control-sm" name="micro_nombre[]" 
+                                            <input type="text" class="form-control form-control-sm" name="micro_nombre[]"
                                                    value="<?php echo htmlspecialchars($nombre); ?>" placeholder="Nombre (Ej: Zinc)">
                                         </div>
                                         <div class="col-4">
                                             <div class="input-group input-group-sm">
-                                                <input type="number" step="0.01" min="0.01" class="form-control" name="micro_porcentaje[]" 
+                                                <input type="number" step="0.01" min="0.01" class="form-control" name="micro_porcentaje[]"
                                                        value="<?php echo $porcentaje; ?>" placeholder="0">
                                                 <span class="input-group-text">%</span>
                                             </div>

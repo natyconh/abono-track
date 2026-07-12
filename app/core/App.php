@@ -1,86 +1,52 @@
 <?php
-// app/core/App.php
-// Esta es la clase principal del "Router".
-// Se encarga de leer la URL y cargar el controlador y método adecuados.
-// E.g., /public/users/login -> new UsersController()->login();
+// app/core/App.php — Abono Track
+// Router principal: lee la URL y despacha al controlador y método correspondiente.
+// Ejemplo: /predios/edit/5 → new PrediosController()->edit(5)
 
 class App {
-    
-    // Propiedades por defecto
-    protected $currentController = 'HomeController'; // Controlador por defecto
-    protected $currentMethod = 'index'; // Método por defecto
-    protected $params = []; // Parámetros (ej. /users/edit/5 -> [5])
+
+    protected $currentController = 'HomeController';
+    protected $currentMethod     = 'index';
+    protected $params            = [];
 
     public function __construct() {
-        // 1. Obtener y procesar la URL
         $url = $this->getUrl();
 
-        // 2. Buscar el Controlador (Parte 1 de la URL)
-        // Comprobar si existe el archivo del controlador en app/controllers/
-        // E.g., 'users' -> 'UsersController'
+        // 1. Resolver Controlador
         if (isset($url[0])) {
-            $controllerName = ucwords($url[0]) . 'Controller'; // Ej: 'Users' . 'Controller'
+            $controllerName = ucwords($url[0]) . 'Controller';
             if (file_exists(APP_ROOT . '/controllers/' . $controllerName . '.php')) {
-                // Si existe, lo establecemos como controlador actual
                 $this->currentController = $controllerName;
-                // "Sacamos" el controlador del array de URL
                 unset($url[0]);
             }
         }
 
-        // 3. Cargar el Controlador
         require_once APP_ROOT . '/controllers/' . $this->currentController . '.php';
-        // Instanciar el controlador
-        // E.g., $this->currentController = new UsersController();
         $this->currentController = new $this->currentController();
 
-        // 4. Buscar el Método (Parte 2 de la URL)
-        // Comprobar si se pasó un método
+        // 2. Resolver Método
         if (isset($url[1])) {
-            // Comprobar si el método existe en el controlador instanciado
             if (method_exists($this->currentController, $url[1])) {
-                $this->currentMethod = $url[1]; // Ej: 'login'
-                // "Sacamos" el método del array de URL
+                $this->currentMethod = $url[1];
                 unset($url[1]);
             }
         }
 
-        // 5. Obtener los Parámetros (Resto de la URL)
-        // Lo que queda en $url son los parámetros
-        $this->params = $url ? array_values($url) : []; // Ej: [5]
+        // 3. Parámetros restantes
+        $this->params = $url ? array_values($url) : [];
 
-        // 6. Llamar al método con los parámetros
-        // E.g., call_user_func_array([new UsersController(), 'login'], []);
+        // 4. Ejecutar
         call_user_func_array([$this->currentController, $this->currentMethod], $this->params);
     }
 
-    /**
-     * Obtiene la URL del parámetro 'url' (gracias a .htaccess),
-     * la limpia y la divide en un array.
-     */
-   public function getUrl() {
-    // Caso 1: URLs tipo ?url=users/login
-    if (isset($_GET['url'])) {
-        $url = rtrim($_GET['url'], '/');
-        $url = filter_var($url, FILTER_SANITIZE_URL);
-        return explode('/', $url);
+    public function getUrl() {
+        if (isset($_GET['url'])) {
+            $url = rtrim($_GET['url'], '/');
+            $url = filter_var($url, FILTER_SANITIZE_URL);
+            $url = explode('/', $url);
+            return $url;
+        }
+        return [];
     }
-
-    // Caso 2: URLs tipo /users/login
-    $requestUri = $_SERVER['REQUEST_URI'] ?? '';
-
-    // Quitar query string, por ejemplo ?algo=1
-    $requestUri = parse_url($requestUri, PHP_URL_PATH);
-
-    // Quitar slash inicial y final
-    $requestUri = trim($requestUri, '/');
-
-    if (!empty($requestUri)) {
-        $requestUri = filter_var($requestUri, FILTER_SANITIZE_URL);
-        return explode('/', $requestUri);
-    }
-
-    return [];
-}
 }
 ?>

@@ -74,81 +74,120 @@ Permite generar reportes nutricionales para revisar los aportes realizados y apo
 - **JavaScript Vanilla:** apoyo a interacciones dinámicas dentro de la plataforma.
 - **Git y GitHub:** control de versiones, respaldo del código y evidencia del avance del proyecto.
 - **Arquitectura MVC:** separación entre modelos, vistas, controladores y lógica central del sistema.
+---
 
-## Estructura del repositorio
+## Estructura de Archivos del Proyecto
 
-```text
-abono-track/
-├── README.md
-├── .gitignore
-├── composer.json
-├── composer.lock
+```
+_legacy/abono-track/
+│
+├── public/                         ← Document root del servidor web
+│   ├── index.php                   ← Punto de entrada único (front controller)
+│   └── .htaccess                   ← Rewrite rules para Apache shared hosting
+│
 ├── app/
-│   ├── controllers/
-│   │   ├── AdminController.php
-│   │   ├── FertilizacionController.php
-│   │   ├── FertilizanteController.php
-│   │   ├── PrediosController.php
-│   │   ├── SectoresController.php
-│   │   ├── TrabajadoresController.php
-│   │   └── UsersController.php
+│   ├── config/
+│   │   └── config.php              ← DB host, user, pass, name + constante BASE_URL
+│   │
 │   ├── core/
-│   │   ├── App.php
-│   │   ├── Controller.php
-│   │   ├── FertilizacionService.php
-│   │   ├── SessionHelper.php
-│   │   └── StorageService.php
+│   │   ├── App.php                 ← Router: parsea URL → Controller/Method/Params
+│   │   ├── Controller.php          ← Clase base: carga modelos y vistas
+│   │   ├── Database.php            ← Singleton PDO (sin empresa_id)
+│   │   ├── SessionHelper.php       ← Login/logout helpers de sesión PHP
+│   │   ├── FertilizacionService.php← Lógica de negocio NPK (cálculos, balances)
+│   │   ├── RiegoService.php        ← Lógica de configuración de riego y caudales
+│   │   └── StorageService.php      ← Upload simple de archivos (simplificado)
+│   │
+│   ├── controllers/
+│   │   ├── HomeController.php      ← Dashboard principal con KPIs
+│   │   ├── PublicoController.php   ← Login / Logout (vistas sin sesión)
+│   │   ├── UsersController.php     ← CRUD usuarios + gestión de roles
+│   │   ├── PrediosController.php   ← CRUD predios (campos agrícolas)
+│   │   ├── SectoresController.php  ← CRUD sectores dentro de cada predio
+│   │   ├── CultivosController.php  ← CRUD catálogo de cultivos (dato maestro FK)
+│   │   ├── FertilizanteController.php ← CRUD fertilizantes con NPK y densidades
+│   │   ├── FertilizacionController.php← Programas de temporada + ejecución
+│   │   ├── RiegoController.php     ← Configuración de riego por sector
+│   │   └── ReporteController.php   ← Reportes NPK: desviación, acumulado, PDF
+│   │
 │   ├── models/
-│   │   ├── FertilizanteModel.php
-│   │   ├── PredioModel.php
-│   │   ├── SectorModel.php
-│   │   ├── TrabajadorModel.php
-│   │   └── UserModel.php
+│   │   ├── UserModel.php           ← Usuarios y autenticación
+│   │   ├── PredioModel.php         ← Predios (sin empresa_id)
+│   │   ├── SectorModel.php         ← Sectores vinculados a predio
+│   │   ├── CultivoModel.php        ← Catálogo cultivos (vid, manzano, etc.)
+│   │   ├── FertilizanteModel.php   ← Catálogo fertilizantes NPK
+│   │   ├── RiegoModel.php          ← Configuración y registros de riego
+│   │   ├── ConfiguracionRiegoModel.php ← Parámetros de riego por temporada
+│   │   └── KpiModel.php            ← Consultas agregadas para dashboard
+│   │   ← [ELIMINADOS: Cosecha*, Labor*, Instalacion*, Solicitud*,
+│   │      Trabajador*, Clima*, EntidadLegal*, UsuarioWhatsappLink*]
+│   │
 │   └── views/
-│       ├── admin/
-│       ├── fertilizacion/
-│       ├── fertilizantes/
-│       ├── home/
 │       ├── layout/
+│       │   ├── header.php          ← <head>, CSS, navbar superior
+│       │   ├── sidebar.php         ← Menú lateral (solo módulos Abono Track)
+│       │   └── footer.php          ← Cierre HTML + scripts JS
+│       ├── publico/
+│       │   └── login.php           ← Formulario de login
+│       ├── home/
+│       │   └── index.php           ← Dashboard: KPIs NPK, últimas aplicaciones
 │       ├── predios/
+│       │   ├── index.php
+│       │   ├── create.php
+│       │   └── edit.php
 │       ├── sectores/
-│       ├── trabajadores/
+│       │   ├── index.php
+│       │   ├── create.php
+│       │   └── edit.php
+│       ├── cultivos/
+│       │   ├── index.php
+│       │   ├── create.php
+│       │   └── edit.php
+│       ├── fertilizantes/
+│       │   ├── index.php
+│       │   ├── create.php
+│       │   └── edit.php
+│       ├── fertilizacion/
+│       │   ├── index.php           ← Lista de programas de temporada
+│       │   ├── create.php
+│       │   ├── edit.php
+│       │   └── ejecucion.php       ← Registro de aplicación real en terreno
+│       ├── riego/
+│       │   ├── index.php
+│       │   ├── create.php
+│       │   └── edit.php
+│       ├── reporte/
+│       │   ├── index.php           ← Selector de rango y predio/sector
+│       │   ├── npk_acumulado.php   ← Tabla NPK acumulado vs programado
+│       │   └── desviacion.php      ← Gráfico de desviación por semana
 │       └── users/
+│           ├── index.php
+│           ├── create.php
+│           └── edit.php
+│       ← [ELIMINADAS: avance_labores/, clima/, cosecha/, cosechas_destinos/,
+│          entidades_legales/, instalaciones/, puntos/, tipos_puntos/,
+│          solicitudes/, solicitudes_categorias/, reporte_cosecha/, trabajadores/]
+│
 ├── database/
-│   └── schema_sanitized.sql
-└── public/
-    ├── css/
-    │   └── style.css
-    ├── img/
-    ├── js/
-    │   └── main.js
-    └── index.php
+│   └── abono_track_demo.sql        ← Seed: 1 predio, 3 sectores, 5 fertilizantes,
+│                                      2 cultivos, programas y ejecuciones de demo
+│
+└── composer.json                   ← Solo dependencias mínimas (sin composer.phar)
+```
+---
+
+## Menú Sidebar Final (Abono Track)
+
+```
+[🏠] Dashboard
+[🗺️] Configuración
+    ↳ Predios
+    ↳ Sectores
+    ↳ Cultivos
+[🌱] Catálogo de Fertilizantes
+[📅] Programas de Temporada
+[✅] Registro de Aplicación
+[📊] Reportes NPK
 ```
 
-La estructura del proyecto sigue una organización basada en arquitectura MVC, separando controladores, modelos, vistas y componentes centrales del sistema. Además, el directorio `public/` concentra los recursos accesibles desde el navegador, como estilos, imágenes, scripts y el punto de entrada principal de la aplicación.
-
-
-## Modelo de datos
-
-El proyecto utiliza una base de datos relacional en MySQL. El archivo `database/schema_sanitized.sql` contiene la estructura principal del sistema, permitiendo representar entidades como empresas, usuarios, trabajadores, predios, sectores, fertilizantes, configuraciones de distribución, registros de fertilización y reportes.
-
-Este modelo permite organizar la información de forma estructurada, mantener relaciones entre los datos y facilitar la trazabilidad de los programas de fertilización agrícola.
-
-## Arquitectura
-
-El sistema se organiza bajo una arquitectura MVC, separando responsabilidades entre las distintas capas del proyecto:
-
-- **Models:** administran el acceso a datos y las consultas relacionadas con la base de datos.
-- **Views:** presentan las interfaces del usuario, incluyendo formularios, tablas, paneles y reportes.
-- **Controllers:** reciben las solicitudes del usuario y coordinan el flujo entre modelos, vistas y servicios.
-- **Services:** concentran la lógica de negocio, especialmente los cálculos de fertilización, distribución y aportes nutricionales.
-
-Esta estructura permite mantener el código ordenado, facilitar su mantenimiento y separar la lógica de presentación, datos y procesamiento.
-
-## Alcance académico
-
-Esta versión tiene fines académicos y demostrativos. El proyecto fue adaptado como una propuesta coherente para la gestión de fertilización agrícola bajo el nombre **Abono Track**.
-
-## Licencia
-
-Uso académico.
+---

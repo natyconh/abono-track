@@ -1,9 +1,10 @@
 <?php
 /**
- * Controlador Admin para Fertilizantes (CRUD)
+ * Controlador Admin para Insumos/Fertilizantes (CRUD)
+ * Abono Track
  */
 class FertilizanteController extends Controller {
-    
+
     private $fertilizanteModel;
 
     public function __construct() {
@@ -14,38 +15,40 @@ class FertilizanteController extends Controller {
 
     public function index() {
         $data = [
-            'titulo' => 'Catálogo de Fertilizantes e Insumos',
+            'titulo'       => 'Catálogo de Fertilizantes e Insumos — Abono Track',
             'fertilizantes' => $this->fertilizanteModel->obtenerTodos(),
-            'breadcrumbs' => [
+            'breadcrumbs'  => [
                 ['label' => 'Administración', 'url' => URL_ROOT . '/admin'],
-                ['label' => 'Fertilizantes']
-            ]
+                ['label' => 'Fertilizantes'],
+            ],
         ];
         $this->view('fertilizantes/index', $data);
     }
 
     public function form($id = null) {
         $data = [
-            'titulo' => 'Nuevo Producto',
+            'titulo'   => 'Nuevo Producto',
             'producto' => (object)[
-                'id' => null,
-                'nombre_comercial' => '',
-                'tipo_producto' => 'fertilizante',
-                'tipo_unidad' => 'kg',
-                'densidad' => '1.000',
-                'porcentaje_n' => '', 'porcentaje_p' => '', 'porcentaje_k' => '',
-                'micronutrientes_array' => [] // Array vacío para vista nueva
+                'id'                  => null,
+                'nombre_comercial'    => '',
+                'tipo_producto'       => 'fertilizante',
+                'tipo_unidad'         => 'kg',
+                'densidad'            => '1.000',
+                'porcentaje_n'        => '',
+                'porcentaje_p'        => '',
+                'porcentaje_k'        => '',
+                'micronutrientes_array' => [],
             ],
             'breadcrumbs' => [
                 ['label' => 'Catálogo', 'url' => URL_ROOT . '/fertilizante'],
-                ['label' => $id ? 'Editar' : 'Crear']
-            ]
+                ['label' => $id ? 'Editar' : 'Crear'],
+            ],
         ];
 
         if ($id) {
             $prod = $this->fertilizanteModel->obtenerPorId($id);
             if ($prod) {
-                $data['titulo'] = 'Editar: ' . $prod->nombre_comercial;
+                $data['titulo']   = 'Editar: ' . $prod->nombre_comercial;
                 $data['producto'] = $prod;
             } else {
                 SessionHelper::setFlash('Producto no encontrado', 'danger');
@@ -58,35 +61,29 @@ class FertilizanteController extends Controller {
 
     public function guardar() {
         if ($_SERVER['REQUEST_METHOD'] != 'POST') $this->redirect('fertilizante/index');
-        
+
         $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
-        $id = $_POST['id'] ?? null;
-        
-        // Construir JSON de micronutrientes desde los arrays del formulario dinámico
-        $micronutrientes = null;
-        $nombres  = $_POST['micro_nombre']     ?? [];
+        $id    = $_POST['id'] ?? null;
+
+        $nombres     = $_POST['micro_nombre']     ?? [];
         $porcentajes = $_POST['micro_porcentaje'] ?? [];
-        $micros = [];
+        $micros      = [];
         foreach ($nombres as $i => $nombre) {
             $nombre = trim($nombre);
             $porc   = isset($porcentajes[$i]) ? (float)$porcentajes[$i] : 0;
-            if ($nombre !== '' && $porc > 0) {
-                $micros[$nombre] = $porc;
-            }
+            if ($nombre !== '' && $porc > 0) $micros[$nombre] = $porc;
         }
-        if (!empty($micros)) {
-            $micronutrientes = json_encode($micros, JSON_UNESCAPED_UNICODE);
-        }
+        $micronutrientes = !empty($micros) ? json_encode($micros, JSON_UNESCAPED_UNICODE) : null;
 
         $datos = [
-            'nombre_comercial'  => trim($_POST['nombre_comercial']),
-            'tipo_producto'     => $_POST['tipo_producto'],
-            'tipo_unidad'       => $_POST['tipo_unidad'],
-            'densidad'          => ($_POST['tipo_unidad'] === 'lt' && !empty($_POST['densidad'])) ? $_POST['densidad'] : 1.000,
-            'porcentaje_n'      => $_POST['porcentaje_n'],
-            'porcentaje_p'      => $_POST['porcentaje_p'],
-            'porcentaje_k'      => $_POST['porcentaje_k'],
-            'micronutrientes'   => $micronutrientes,
+            'nombre_comercial' => trim($_POST['nombre_comercial']),
+            'tipo_producto'    => $_POST['tipo_producto'],
+            'tipo_unidad'      => $_POST['tipo_unidad'],
+            'densidad'         => ($_POST['tipo_unidad'] === 'lt' && !empty($_POST['densidad'])) ? $_POST['densidad'] : 1.000,
+            'porcentaje_n'     => $_POST['porcentaje_n'],
+            'porcentaje_p'     => $_POST['porcentaje_p'],
+            'porcentaje_k'     => $_POST['porcentaje_k'],
+            'micronutrientes'  => $micronutrientes,
         ];
 
         if (empty($datos['nombre_comercial'])) {
@@ -106,10 +103,10 @@ class FertilizanteController extends Controller {
         } catch (Exception $e) {
             SessionHelper::setFlash('Error: ' . $e->getMessage(), 'danger');
         }
-        
+
         $this->redirect('fertilizante/index');
     }
-    
+
     public function eliminar($id) {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $this->fertilizanteModel->desactivar($id);

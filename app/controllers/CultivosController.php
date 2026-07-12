@@ -1,43 +1,43 @@
 <?php
 /**
- * Controlador para Gestión de Cultivos (Maestro)
+ * Controlador para Gestión de Cultivos (Maestro) — Abono Track
  */
 class CultivosController extends Controller {
-    
+
     private $cultivoModel;
 
     public function __construct() {
         parent::__construct();
-        $this->protect(['Admin']); // Solo Ana configura esto
+        $this->protect(['Admin']);
         $this->cultivoModel = $this->model('CultivoModel');
     }
 
     public function index() {
         $data = [
-            'titulo' => 'Catálogo de Cultivos',
-            'cultivos' => $this->cultivoModel->obtenerTodos(),
+            'titulo'      => 'Catálogo de Cultivos — Abono Track',
+            'cultivos'    => $this->cultivoModel->obtenerTodos(),
             'breadcrumbs' => [
                 ['label' => 'Administración', 'url' => URL_ROOT . '/admin'],
-                ['label' => 'Cultivos']
-            ]
+                ['label' => 'Cultivos'],
+            ],
         ];
         $this->view('cultivos/index', $data);
     }
 
     public function form($id = null) {
         $data = [
-            'titulo' => 'Nuevo Cultivo',
-            'cultivo' => (object)['id' => null, 'nombre' => '', 'variedad' => ''],
+            'titulo'   => 'Nuevo Cultivo',
+            'cultivo'  => (object)['id' => null, 'nombre' => '', 'variedad' => ''],
             'breadcrumbs' => [
                 ['label' => 'Cultivos', 'url' => URL_ROOT . '/cultivos'],
-                ['label' => $id ? 'Editar' : 'Crear']
-            ]
+                ['label' => $id ? 'Editar' : 'Crear'],
+            ],
         ];
 
         if ($id) {
             $cultivo = $this->cultivoModel->obtenerPorId($id);
             if (!$cultivo) $this->redirect('cultivos/index');
-            $data['titulo'] = 'Editar Cultivo';
+            $data['titulo']  = 'Editar Cultivo';
             $data['cultivo'] = $cultivo;
         }
 
@@ -46,11 +46,11 @@ class CultivosController extends Controller {
 
     public function guardar() {
         if ($_SERVER['REQUEST_METHOD'] != 'POST') $this->redirect('cultivos/index');
-        
-        $id = $_POST['id'] ?? null;
+
+        $id    = $_POST['id'] ?? null;
         $datos = [
-            'nombre' => trim($_POST['nombre']),
-            'variedad' => trim($_POST['variedad'])
+            'nombre'   => trim($_POST['nombre']),
+            'variedad' => trim($_POST['variedad']),
         ];
 
         if (empty($datos['nombre'])) {

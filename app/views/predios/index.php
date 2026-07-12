@@ -1,7 +1,11 @@
+<?php
+// _legacy/abono-track/app/views/predios/index.php
+// Lista de predios/cuarteles del usuario autenticado
+?>
 <div class="container-fluid mt-4">
     <div class="row">
-        <div class="col-lg-12 mx-auto"> <!-- Ancho completo para más columnas -->
-            
+        <div class="col-lg-12 mx-auto">
+
             <?php SessionHelper::displayFlash(); ?>
 
             <div class="card shadow-sm">
@@ -35,22 +39,19 @@
                                         </td>
                                     </tr>
                                 <?php else: ?>
-                                    <?php foreach($data['predios'] as $predio): 
-                                        // Cálculo de visualización
-                                        $den = (int)$predio->plantas_por_hectarea;
+                                    <?php foreach($data['predios'] as $predio):
+                                        $den    = (int)$predio->plantas_por_hectarea;
                                         $caudal = (float)$predio->caudal_lt_hora;
-                                        $pp = ($den > 0 && $caudal > 0) ? ($den * $caudal / 10000) : 0;
+                                        $pp     = ($den > 0 && $caudal > 0) ? ($den * $caudal / 10000) : 0;
                                     ?>
                                     <tr>
                                         <td class="ps-4 fw-bold text-secondary"><?php echo htmlspecialchars($predio->nombre); ?></td>
                                         <td class="text-center"><?php echo htmlspecialchars($predio->año_plantacion ?? '-'); ?></td>
                                         <td class="text-end font-monospace"><?php echo number_format($predio->superficie_total, 2, ',', '.'); ?></td>
                                         <td class="text-end text-muted small"><?php echo $den ?: '-'; ?></td>
-                                        
                                         <td class="text-end text-primary">
                                             <?php echo $caudal > 0 ? number_format($caudal, 1) . ' <small>L/h</small>' : '-'; ?>
                                         </td>
-                                        
                                         <td class="text-center fw-bold">
                                             <?php if($pp > 0): ?>
                                                 <span class="badge bg-info text-dark border">
@@ -60,7 +61,6 @@
                                                 <span class="text-muted text-opacity-50">-</span>
                                             <?php endif; ?>
                                         </td>
-
                                         <td class="text-center">
                                             <?php if ($predio->activo): ?>
                                                 <span class="badge bg-success-subtle text-success border border-success">Activo</span>
@@ -73,7 +73,7 @@
                                                 <a href="<?php echo URL_ROOT; ?>/predios/form/<?php echo $predio->id; ?>" class="btn btn-outline-primary" title="Editar">
                                                     <i class="bi bi-pencil-fill"></i>
                                                 </a>
-                                                <form action="<?php echo URL_ROOT; ?>/predios/eliminar/<?php echo $predio->id; ?>" method="POST" onsubmit="return confirm('¿Está seguro de que desea DESACTIVAR este predio?');">
+                                                <form action="<?php echo URL_ROOT; ?>/predios/eliminar/<?php echo $predio->id; ?>" method="POST" onsubmit="return confirm('¿Desactivar este predio?');">
                                                     <button type="submit" class="btn btn-outline-danger border-start-0 rounded-end" title="Desactivar">
                                                         <i class="bi bi-eye-slash-fill"></i>
                                                     </button>

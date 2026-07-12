@@ -1,7 +1,10 @@
+<?php
+// _legacy/abono-track/app/views/cultivos/index.php
+?>
 <div class="container-fluid mt-4">
     <div class="row">
         <div class="col-md-10 mx-auto">
-            
+
             <?php SessionHelper::displayFlash(); ?>
 
             <div class="card shadow-sm">
@@ -13,7 +16,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                        <table class="table table-hover align-middle mb-0">
                             <thead class="bg-light">
                                 <tr>
                                     <th class="ps-4">Especie</th>
@@ -44,7 +47,6 @@
                                             <a href="<?php echo URL_ROOT; ?>/cultivos/form/<?php echo $c->id; ?>" class="btn btn-outline-primary btn-sm" title="Editar">
                                                 <i class="bi bi-pencil-fill"></i>
                                             </a>
-                                            
                                             <form action="<?php echo URL_ROOT; ?>/cultivos/eliminar/<?php echo $c->id; ?>" method="POST" class="d-inline" onsubmit="return confirm('¿Desea desactivar este cultivo?');">
                                                 <button type="submit" class="btn btn-outline-danger btn-sm border-start-0 rounded-end ms-0" title="Desactivar">
                                                     <i class="bi bi-trash-fill"></i>
@@ -59,6 +61,7 @@
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 </div>

@@ -1,12 +1,16 @@
 {
-    "name": "administrador/gestion_agricola_mvc",
-    "authors": [
-        {
-            "name": "Cristian Antonio Manzano Ayala",
-            "email": "cmanzanoayala@gmail.com"
-        }
-    ],
+    "name": "abono-track/app",
+    "description": "Abono Track — Sistema de trazabilidad NPK para fertirrigación agrícola",
+    "type": "project",
     "require": {
-        "phpoffice/phpspreadsheet": "^5.3"
+        "php": ">=8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "AbonoTrack\\": "app/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true
     }
 }

@@ -56,7 +56,6 @@
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <!-- CAMPO AÑADIDO QUE FALTABA -->
                             <div class="col-md-6">
                                 <label for="año_plantacion" class="form-label">Año de Plantación</label>
                                 <input type="number" class="form-control" id="año_plantacion" name="año_plantacion" 
@@ -198,15 +197,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const supInput = document.getElementById('superficie_total');
     const denInput = document.getElementById('plantas_por_hectarea');
     const totInput = document.getElementById('cantidad_plantas');
-    const btnCalc = document.getElementById('btnCalcular');
+    const btnCalc  = document.getElementById('btnCalcular');
 
     function calcularMetricas() {
         const sup = parseFloat(supInput.value) || 0;
-        const den = parseInt(denInput.value) || 0;
-        
+        const den = parseInt(denInput.value)   || 0;
         if (sup > 0 && den > 0) {
-            const total = Math.round(sup * den);
-            totInput.value = total;
+            totInput.value = Math.round(sup * den);
         }
     }
 
