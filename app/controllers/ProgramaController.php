@@ -1,8 +1,6 @@
 <?php
 /**
  * ProgramaController — Abono Track
- * Gestiona los programas de fertilización de temporada.
- * Rutas: /programa/*
  */
 class ProgramaController extends Controller {
 
@@ -25,9 +23,8 @@ class ProgramaController extends Controller {
     }
 
     // -----------------------------------------------------------------------
-    // INDEX — listado de programas
+    // INDEX
     // -----------------------------------------------------------------------
-
     public function index() {
         $resumen = $this->programaModel->listarResumen();
         $predios = $this->predioModel->obtenerPuntosInyeccion();
@@ -36,23 +33,17 @@ class ProgramaController extends Controller {
             'titulo'      => 'Programas de Fertilización — Abono Track',
             'resumen'     => $resumen,
             'predios'     => $predios,
-            'breadcrumbs' => [
-                ['label' => 'Programas de Fertilización'],
-            ],
+            'breadcrumbs' => [['label' => 'Programas de Fertilización']],
         ];
         $this->view('programa/index', $data);
     }
 
     // -----------------------------------------------------------------------
-    // CREATE — formulario para nuevo programa
+    // CREATE
     // -----------------------------------------------------------------------
-
     public function create() {
         $predios  = $this->predioModel->obtenerTodosLosPredios();
         $cultivos = $this->cultivoModel->obtenerTodos();
-
-        // Temporada actual: si estamos entre sep-dic → temporada = año actual
-        // Si ene-ago → temporada = año anterior
         $mes = (int)date('n');
         $temporadaDefault = $mes >= 9 ? date('Y') : (date('Y') - 1);
 
@@ -70,13 +61,10 @@ class ProgramaController extends Controller {
     }
 
     // -----------------------------------------------------------------------
-    // STORE — guardar nuevo programa (POST)
+    // STORE (POST)
     // -----------------------------------------------------------------------
-
     public function store() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->redirect('programa');
-        }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { $this->redirect('programa'); }
 
         $predioId  = intval($_POST['predio_id'] ?? 0);
         $temporada = trim($_POST['temporada']   ?? '');
@@ -94,29 +82,7 @@ class ProgramaController extends Controller {
             return;
         }
 
-        $filas = [];
-        for ($i = 0; $i < count($semanas); $i++) {
-            if (empty($fechas[$i])) continue;
-            // Micronutrientes: campo JSON libre desde textarea
-            $microsRaw  = trim($_POST['micronutrientes_objetivo'][$i] ?? '');
-            $microsJson = null;
-            if ($microsRaw !== '') {
-                $decoded    = json_decode($microsRaw, true);
-                $microsJson = is_array($decoded) ? json_encode($decoded, JSON_UNESCAPED_UNICODE) : null;
-            }
-            $filas[] = [
-                'predio_id'                => $predioId,
-                'cultivo_id'               => $cultivoId,
-                'temporada'                => $temporada,
-                'semana'                   => (int)$semanas[$i],
-                'fecha_estimada'           => $fechas[$i],
-                'n_objetivo'               => (float)($ns[$i] ?? 0),
-                'p_objetivo'               => (float)($ps[$i] ?? 0),
-                'k_objetivo'               => (float)($ks[$i] ?? 0),
-                'micronutrientes_objetivo' => $microsJson,
-                'observaciones'            => $obs[$i] ?? null,
-            ];
-        }
+        $filas = $this->buildFilas($predioId, $cultivoId, $temporada, $semanas, $fechas, $ns, $ps, $ks, $obs);
 
         if (empty($filas)) {
             SessionHelper::setFlash('No se enviaron semanas válidas.', 'warning');
@@ -125,38 +91,135 @@ class ProgramaController extends Controller {
         }
 
         try {
-            if ($this->programaModel->crearMasivo($filas)) {
-                SessionHelper::setFlash('Programa de ' . count($filas) . ' semanas guardado correctamente.', 'success');
-            } else {
-                SessionHelper::setFlash('Error al guardar el programa.', 'danger');
-            }
+            $this->programaModel->crearMasivo($filas);
+            SessionHelper::setFlash('Programa de ' . count($filas) . ' semanas guardado correctamente.', 'success');
         } catch (Exception $e) {
             SessionHelper::setFlash('Excepción: ' . $e->getMessage(), 'danger');
         }
-
         $this->redirect('programa');
     }
 
     // -----------------------------------------------------------------------
-    // COMPARAR — comparación programa vs aplicado
+    // EDIT — formulario con datos precargados
     // -----------------------------------------------------------------------
+    public function edit($predioId = null) {
+        $temporada = trim($_GET['temporada'] ?? '');
 
+        if (!$predioId || !$temporada) {
+            SessionHelper::setFlash('Parámetros insuficientes para editar.', 'warning');
+            $this->redirect('programa');
+            return;
+        }
+
+        $semanas  = $this->programaModel->obtenerSemanas($predioId, $temporada);
+        if (empty($semanas)) {
+            SessionHelper::setFlash('No se encontró el programa solicitado.', 'danger');
+            $this->redirect('programa');
+            return;
+        }
+
+        $predios  = $this->predioModel->obtenerTodosLosPredios();
+        $cultivos = $this->cultivoModel->obtenerTodos();
+        $predio   = null;
+        foreach ($predios as $p) {
+            if ((int)$p->id === (int)$predioId) { $predio = $p; break; }
+        }
+
+        $data = [
+            'titulo'     => 'Editar Programa — ' . ($predio->nombre ?? '') . ' / Temp. ' . $temporada,
+            'predios'    => $predios,
+            'cultivos'   => $cultivos,
+            'predio_id'  => (int)$predioId,
+            'temporada'  => $temporada,
+            'semanas'    => $semanas,
+            'cultivo_id' => $semanas[0]->cultivo_id ?? null,
+            'breadcrumbs' => [
+                ['label' => 'Programas', 'url' => URL_ROOT . '/programa'],
+                ['label' => 'Editar'],
+            ],
+        ];
+        $this->view('programa/edit', $data);
+    }
+
+    // -----------------------------------------------------------------------
+    // UPDATE (POST)
+    // -----------------------------------------------------------------------
+    public function update() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { $this->redirect('programa'); }
+
+        $predioId  = intval($_POST['predio_id'] ?? 0);
+        $temporada = trim($_POST['temporada']   ?? '');
+        $semanas   = $_POST['semana']            ?? [];
+        $fechas    = $_POST['fecha_estimada']    ?? [];
+        $ns        = $_POST['n_objetivo']        ?? [];
+        $ps        = $_POST['p_objetivo']        ?? [];
+        $ks        = $_POST['k_objetivo']        ?? [];
+        $obs       = $_POST['observaciones']     ?? [];
+        $cultivoId = intval($_POST['cultivo_id'] ?? 0) ?: null;
+
+        if (!$predioId || !$temporada || empty($semanas)) {
+            SessionHelper::setFlash('Faltan datos obligatorios.', 'danger');
+            $this->redirect('programa/edit/' . $predioId . '?temporada=' . urlencode($temporada));
+            return;
+        }
+
+        $filas = $this->buildFilas($predioId, $cultivoId, $temporada, $semanas, $fechas, $ns, $ps, $ks, $obs);
+
+        if (empty($filas)) {
+            SessionHelper::setFlash('No se enviaron semanas válidas.', 'warning');
+            $this->redirect('programa/edit/' . $predioId . '?temporada=' . urlencode($temporada));
+            return;
+        }
+
+        try {
+            $this->programaModel->actualizarMasivo($predioId, $temporada, $filas);
+            SessionHelper::setFlash('Programa actualizado correctamente (' . count($filas) . ' semanas).', 'success');
+        } catch (Exception $e) {
+            SessionHelper::setFlash('Error al actualizar: ' . $e->getMessage(), 'danger');
+        }
+        $this->redirect('programa');
+    }
+
+    // -----------------------------------------------------------------------
+    // COMPARAR
+    // -----------------------------------------------------------------------
     public function comparar($predioId = null) {
-        $predios   = $this->predioModel->obtenerTodosLosPredios();
+        // Solo predios reales (tipo_superficie = 'cultivo')
+        $predios   = $this->predioModel->obtenerPrediosAgricolas();
         $temporada = $_GET['temporada'] ?? null;
         $datos     = [];
         $predio    = null;
 
-        if ($predioId && $temporada) {
-            // Buscar nombre del predio
-            foreach ($predios as $p) {
-                if ((int)$p->id === (int)$predioId) { $predio = $p; break; }
+        // Auto-selección: si no viene predio en URL, usar el primero con programa
+        if (!$predioId && !empty($predios)) {
+            $resumen = $this->programaModel->listarResumen();
+            if (!empty($resumen)) {
+                // Buscar el primer resumen cuyo predio_id esté en predios reales
+                $predioIdsReales = array_column($predios, 'id');
+                foreach ($resumen as $r) {
+                    if (in_array($r->predio_id, $predioIdsReales)) {
+                        $predioId  = $r->predio_id;
+                        $temporada = $r->temporada;
+                        break;
+                    }
+                }
             }
-            $datos = $this->fertilizacionService->compararProgramaVsAplicado($predioId, $temporada);
         }
 
-        // Temporadas disponibles para el predio seleccionado
+        // Buscar objeto predio
+        foreach ($predios as $p) {
+            if ((int)$p->id === (int)$predioId) { $predio = $p; break; }
+        }
+
+        // Auto-selección de temporada si no vino en URL
         $temporadas = $predioId ? $this->programaModel->listarTemporadas($predioId) : [];
+        if ($predioId && !$temporada && !empty($temporadas)) {
+            $temporada = $temporadas[0]->temporada;
+        }
+
+        if ($predioId && $temporada) {
+            $datos = $this->fertilizacionService->compararProgramaVsAplicado($predioId, $temporada);
+        }
 
         $data = [
             'titulo'      => 'Comparación Programa vs Aplicado — Abono Track',
@@ -175,13 +238,10 @@ class ProgramaController extends Controller {
     }
 
     // -----------------------------------------------------------------------
-    // DELETE — eliminar programa completo
+    // DELETE
     // -----------------------------------------------------------------------
-
     public function eliminar() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->redirect('programa');
-        }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { $this->redirect('programa'); }
         $predioId  = intval($_POST['predio_id'] ?? 0);
         $temporada = trim($_POST['temporada']   ?? '');
 
@@ -202,7 +262,6 @@ class ProgramaController extends Controller {
     // -----------------------------------------------------------------------
     // EXPORTAR CSV
     // -----------------------------------------------------------------------
-
     public function exportarCSV($predioId = null) {
         $temporada = $_GET['temporada'] ?? null;
         if (!$predioId || !$temporada) {
@@ -237,6 +296,35 @@ class ProgramaController extends Controller {
         }
         fclose($out);
         exit();
+    }
+
+    // -----------------------------------------------------------------------
+    // HELPER privado: construir array de filas desde POST
+    // -----------------------------------------------------------------------
+    private function buildFilas($predioId, $cultivoId, $temporada, $semanas, $fechas, $ns, $ps, $ks, $obs): array {
+        $filas = [];
+        for ($i = 0; $i < count($semanas); $i++) {
+            if (empty($fechas[$i])) continue;
+            $microsRaw  = trim($_POST['micronutrientes_objetivo'][$i] ?? '');
+            $microsJson = null;
+            if ($microsRaw !== '') {
+                $decoded    = json_decode($microsRaw, true);
+                $microsJson = is_array($decoded) ? json_encode($decoded, JSON_UNESCAPED_UNICODE) : null;
+            }
+            $filas[] = [
+                'predio_id'                => $predioId,
+                'cultivo_id'               => $cultivoId,
+                'temporada'                => $temporada,
+                'semana'                   => (int)$semanas[$i],
+                'fecha_estimada'           => $fechas[$i],
+                'n_objetivo'               => (float)($ns[$i] ?? 0),
+                'p_objetivo'               => (float)($ps[$i] ?? 0),
+                'k_objetivo'               => (float)($ks[$i] ?? 0),
+                'micronutrientes_objetivo' => $microsJson,
+                'observaciones'            => $obs[$i] ?? null,
+            ];
+        }
+        return $filas;
     }
 }
 ?>

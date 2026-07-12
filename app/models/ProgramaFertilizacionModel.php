@@ -1,7 +1,6 @@
 <?php
 /**
  * ProgramaFertilizacionModel — Abono Track
- * Gestiona los programas de fertilización de temporada.
  */
 class ProgramaFertilizacionModel {
 
@@ -13,9 +12,6 @@ class ProgramaFertilizacionModel {
         $this->usuario_id = $usuario_id;
     }
 
-    /**
-     * Lista un resumen por predio+temporada (para el index).
-     */
     public function listarResumen() {
         $sql = "SELECT
                     pf.predio_id,
@@ -38,9 +34,21 @@ class ProgramaFertilizacionModel {
     }
 
     /**
-     * Inserta múltiples semanas de un programa en una sola transacción.
-     * Usa la API nativa de Database (beginTransaction / commit / rollBack).
+     * Devuelve todas las semanas de un programa predio+temporada para edición.
      */
+    public function obtenerSemanas($predioId, $temporada) {
+        $sql = "SELECT * FROM programa_fertilizacion
+                WHERE predio_id  = :predio_id
+                  AND temporada  = :temporada
+                  AND usuario_id = :usuario_id
+                ORDER BY semana ASC";
+        $this->db->query($sql);
+        $this->db->bind(':predio_id',  $predioId);
+        $this->db->bind(':temporada',  $temporada);
+        $this->db->bind(':usuario_id', $this->usuario_id);
+        return $this->db->resultSet();
+    }
+
     public function crearMasivo(array $filas): bool {
         $sql = "INSERT INTO programa_fertilizacion
                     (usuario_id, predio_id, cultivo_id, temporada, semana,
@@ -77,8 +85,54 @@ class ProgramaFertilizacionModel {
     }
 
     /**
-     * Obtiene las semanas de un programa específico para exportar.
+     * Reemplaza todas las semanas de un programa (DELETE + INSERT en transacción).
      */
+    public function actualizarMasivo($predioId, $temporada, array $filas): bool {
+        $this->db->beginTransaction();
+        try {
+            // 1. Borrar semanas existentes
+            $this->db->query(
+                "DELETE FROM programa_fertilizacion
+                 WHERE predio_id = :predio_id AND temporada = :temporada AND usuario_id = :usuario_id"
+            );
+            $this->db->bind(':predio_id',  $predioId);
+            $this->db->bind(':temporada',  $temporada);
+            $this->db->bind(':usuario_id', $this->usuario_id);
+            $this->db->execute();
+
+            // 2. Insertar filas nuevas
+            $sql = "INSERT INTO programa_fertilizacion
+                        (usuario_id, predio_id, cultivo_id, temporada, semana,
+                         fecha_estimada, n_objetivo, p_objetivo, k_objetivo,
+                         micronutrientes_objetivo, observaciones)
+                    VALUES
+                        (:usuario_id, :predio_id, :cultivo_id, :temporada, :semana,
+                         :fecha_estimada, :n_objetivo, :p_objetivo, :k_objetivo,
+                         :micronutrientes_objetivo, :observaciones)";
+            foreach ($filas as $f) {
+                $this->db->query($sql);
+                $this->db->bind(':usuario_id',               $this->usuario_id);
+                $this->db->bind(':predio_id',                $f['predio_id']);
+                $this->db->bind(':cultivo_id',               $f['cultivo_id']);
+                $this->db->bind(':temporada',                $f['temporada']);
+                $this->db->bind(':semana',                   $f['semana']);
+                $this->db->bind(':fecha_estimada',           $f['fecha_estimada']);
+                $this->db->bind(':n_objetivo',               $f['n_objetivo']);
+                $this->db->bind(':p_objetivo',               $f['p_objetivo']);
+                $this->db->bind(':k_objetivo',               $f['k_objetivo']);
+                $this->db->bind(':micronutrientes_objetivo', $f['micronutrientes_objetivo']);
+                $this->db->bind(':observaciones',            $f['observaciones']);
+                $this->db->execute();
+            }
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
+    }
+
     public function obtenerPorPredioTemporada($predioId, $temporada) {
         $sql = "SELECT pf.*, p.nombre AS predio
                 FROM programa_fertilizacion pf
@@ -94,9 +148,6 @@ class ProgramaFertilizacionModel {
         return $this->db->resultSet();
     }
 
-    /**
-     * Lista las temporadas disponibles para un predio.
-     */
     public function listarTemporadas($predioId) {
         $sql = "SELECT DISTINCT temporada
                 FROM programa_fertilizacion
@@ -109,9 +160,6 @@ class ProgramaFertilizacionModel {
         return $this->db->resultSet();
     }
 
-    /**
-     * Elimina todas las semanas de un programa predio+temporada.
-     */
     public function eliminarPrograma($predioId, $temporada): bool {
         $sql = "DELETE FROM programa_fertilizacion
                 WHERE predio_id  = :predio_id
@@ -124,11 +172,6 @@ class ProgramaFertilizacionModel {
         return $this->db->execute();
     }
 
-    /**
-     * Obtiene objetivos N/P/K acumulados por predio para una temporada.
-     * Solo semanas con fecha_estimada <= HOY (lo ya "esperado" hasta hoy).
-     * Usado por el reporte nutricional para mostrar alertas de atraso.
-     */
     public function obtenerObjetivosAcumuladosPorPredio(string $temporada): array {
         $sql = "SELECT
                     predio_id,
