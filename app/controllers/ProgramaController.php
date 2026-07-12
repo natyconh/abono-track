@@ -18,9 +18,9 @@ class ProgramaController extends Controller {
         require_once APP_ROOT . '/models/ProgramaFertilizacionModel.php';
         require_once APP_ROOT . '/core/FertilizacionService.php';
 
-        $this->programaModel       = new ProgramaFertilizacionModel($this->db, $this->usuario_id);
-        $this->predioModel         = $this->model('PredioModel');
-        $this->cultivoModel        = $this->model('CultivoModel');
+        $this->programaModel        = new ProgramaFertilizacionModel($this->db, $this->usuario_id);
+        $this->predioModel          = $this->model('PredioModel');
+        $this->cultivoModel         = $this->model('CultivoModel');
         $this->fertilizacionService = new FertilizacionService();
     }
 
@@ -48,7 +48,7 @@ class ProgramaController extends Controller {
     // -----------------------------------------------------------------------
 
     public function create() {
-        $predios  = $this->predioModel->obtenerTodos();
+        $predios  = $this->predioModel->obtenerTodosLosPredios();
         $cultivos = $this->cultivoModel->obtenerTodos();
 
         // Temporada actual: si estamos entre sep-dic → temporada = año actual
@@ -57,11 +57,11 @@ class ProgramaController extends Controller {
         $temporadaDefault = $mes >= 9 ? date('Y') : (date('Y') - 1);
 
         $data = [
-            'titulo'           => 'Nuevo Programa de Fertilización',
-            'predios'          => $predios,
-            'cultivos'         => $cultivos,
-            'temporada_default'=> $temporadaDefault,
-            'breadcrumbs'      => [
+            'titulo'            => 'Nuevo Programa de Fertilización',
+            'predios'           => $predios,
+            'cultivos'          => $cultivos,
+            'temporada_default' => $temporadaDefault,
+            'breadcrumbs'       => [
                 ['label' => 'Programas', 'url' => URL_ROOT . '/programa'],
                 ['label' => 'Nuevo Programa'],
             ],
@@ -98,23 +98,23 @@ class ProgramaController extends Controller {
         for ($i = 0; $i < count($semanas); $i++) {
             if (empty($fechas[$i])) continue;
             // Micronutrientes: campo JSON libre desde textarea
-            $microsRaw = trim($_POST['micronutrientes_objetivo'][$i] ?? '');
+            $microsRaw  = trim($_POST['micronutrientes_objetivo'][$i] ?? '');
             $microsJson = null;
             if ($microsRaw !== '') {
-                $decoded = json_decode($microsRaw, true);
+                $decoded    = json_decode($microsRaw, true);
                 $microsJson = is_array($decoded) ? json_encode($decoded, JSON_UNESCAPED_UNICODE) : null;
             }
             $filas[] = [
-                'predio_id'                  => $predioId,
-                'cultivo_id'                 => $cultivoId,
-                'temporada'                  => $temporada,
-                'semana'                     => (int)$semanas[$i],
-                'fecha_estimada'             => $fechas[$i],
-                'n_objetivo'                 => (float)($ns[$i] ?? 0),
-                'p_objetivo'                 => (float)($ps[$i] ?? 0),
-                'k_objetivo'                 => (float)($ks[$i] ?? 0),
-                'micronutrientes_objetivo'   => $microsJson,
-                'observaciones'              => $obs[$i] ?? null,
+                'predio_id'                => $predioId,
+                'cultivo_id'               => $cultivoId,
+                'temporada'                => $temporada,
+                'semana'                   => (int)$semanas[$i],
+                'fecha_estimada'           => $fechas[$i],
+                'n_objetivo'               => (float)($ns[$i] ?? 0),
+                'p_objetivo'               => (float)($ps[$i] ?? 0),
+                'k_objetivo'               => (float)($ks[$i] ?? 0),
+                'micronutrientes_objetivo' => $microsJson,
+                'observaciones'            => $obs[$i] ?? null,
             ];
         }
 
@@ -142,7 +142,7 @@ class ProgramaController extends Controller {
     // -----------------------------------------------------------------------
 
     public function comparar($predioId = null) {
-        $predios   = $this->predioModel->obtenerTodos();
+        $predios   = $this->predioModel->obtenerTodosLosPredios();
         $temporada = $_GET['temporada'] ?? null;
         $datos     = [];
         $predio    = null;
@@ -159,14 +159,14 @@ class ProgramaController extends Controller {
         $temporadas = $predioId ? $this->programaModel->listarTemporadas($predioId) : [];
 
         $data = [
-            'titulo'       => 'Comparación Programa vs Aplicado — Abono Track',
-            'predios'      => $predios,
-            'predio_id'    => $predioId,
-            'predio'       => $predio,
-            'temporada'    => $temporada,
-            'temporadas'   => $temporadas,
-            'datos'        => $datos,
-            'breadcrumbs'  => [
+            'titulo'      => 'Comparación Programa vs Aplicado — Abono Track',
+            'predios'     => $predios,
+            'predio_id'   => $predioId,
+            'predio'      => $predio,
+            'temporada'   => $temporada,
+            'temporadas'  => $temporadas,
+            'datos'       => $datos,
+            'breadcrumbs' => [
                 ['label' => 'Programas', 'url' => URL_ROOT . '/programa'],
                 ['label' => 'Comparar'],
             ],
@@ -182,8 +182,8 @@ class ProgramaController extends Controller {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('programa');
         }
-        $predioId  = intval($_POST['predio_id']  ?? 0);
-        $temporada = trim($_POST['temporada']    ?? '');
+        $predioId  = intval($_POST['predio_id'] ?? 0);
+        $temporada = trim($_POST['temporada']   ?? '');
 
         if (!$predioId || !$temporada) {
             SessionHelper::setFlash('Datos insuficientes para eliminar.', 'danger');
