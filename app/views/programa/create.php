@@ -1,6 +1,58 @@
 <?php require_once APP_ROOT . '/views/layout/header.php'; ?>
 <?php require_once APP_ROOT . '/views/layout/sidebar.php'; ?>
 
+<style>
+.micro-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-width: 220px;
+}
+.micro-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 52px;
+}
+.micro-item label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 1px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+.micro-item input {
+    width: 52px;
+    text-align: center;
+    font-size: 0.8rem;
+    padding: 2px 4px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    background: #fff;
+}
+.micro-item input:focus {
+    outline: none;
+    border-color: #1a6b3c;
+    box-shadow: 0 0 0 2px rgba(26,107,60,0.15);
+}
+.btn-micro-mas {
+    font-size: 0.7rem;
+    padding: 1px 6px;
+    border: 1px dashed #aaa;
+    border-radius: 4px;
+    background: transparent;
+    color: #666;
+    cursor: pointer;
+    align-self: flex-end;
+    margin-top: 14px;
+    white-space: nowrap;
+}
+.btn-micro-mas:hover { background: #f0f0f0; }
+.micro-extra { display: none; }
+.micro-extra.visible { display: flex; flex-wrap: wrap; gap: 4px; }
+</style>
+
 <div class="content-wrapper flex-grow-1 p-4">
 
     <!-- Breadcrumb -->
@@ -78,10 +130,10 @@
                             <tr>
                                 <th style="width:60px">#Sem.</th>
                                 <th>Fecha Estimada</th>
-                                <th class="text-end">N Objetivo</th>
-                                <th class="text-end">P Objetivo</th>
-                                <th class="text-end">K Objetivo</th>
-                                <th>Micronutrientes (JSON)</th>
+                                <th class="text-end">N (kg/ha)</th>
+                                <th class="text-end">P (kg/ha)</th>
+                                <th class="text-end">K (kg/ha)</th>
+                                <th>Micronutrientes (kg/ha)</th>
                                 <th>Observaciones</th>
                                 <th style="width:50px"></th>
                             </tr>
@@ -95,7 +147,7 @@
         </div>
 
         <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-success">
+            <button type="submit" class="btn btn-success" id="btnGuardar">
                 <i class="bi bi-check2-circle"></i> Guardar Programa
             </button>
             <a href="<?php echo URL_ROOT; ?>/programa" class="btn btn-outline-secondary">
@@ -109,25 +161,116 @@
 const tbody = document.getElementById('semanasTbody');
 let contadorSemanas = 0;
 
+// Micronutrientes principales siempre visibles
+const MICRO_PRINCIPALES = ['Ca', 'Mg', 'Fe'];
+// Micronutrientes secundarios (expandibles)
+const MICRO_EXTRAS = ['Zn', 'Mn', 'B', 'Cu', 'Mo'];
+// Todos juntos para serializar
+const MICRO_TODOS = [...MICRO_PRINCIPALES, ...MICRO_EXTRAS];
+
+/**
+ * Construye el JSON de micronutrientes desde los inputs de una fila.
+ * Solo incluye nutrientes con valor > 0.
+ */
+function buildMicroJson(tr) {
+    const obj = {};
+    MICRO_TODOS.forEach(key => {
+        const input = tr.querySelector(`.micro-input[data-key="${key}"]`);
+        if (!input) return;
+        const val = parseFloat(input.value);
+        if (!isNaN(val) && val > 0) obj[key] = val;
+    });
+    return Object.keys(obj).length > 0 ? JSON.stringify(obj) : '';
+}
+
+/**
+ * Actualiza el campo oculto micronutrientes_objetivo[] cuando cambia un input.
+ */
+function syncMicroHidden(tr) {
+    const hidden = tr.querySelector('.micro-hidden');
+    if (hidden) hidden.value = buildMicroJson(tr);
+}
+
+/**
+ * Genera el HTML de la celda de micronutrientes.
+ */
+function microCeldaHTML() {
+    let principalesHTML = MICRO_PRINCIPALES.map(k => `
+        <div class="micro-item">
+            <label>${k}</label>
+            <input type="number" class="micro-input" data-key="${k}"
+                   value="" min="0" step="0.01" placeholder="0">
+        </div>`).join('');
+
+    let extrasHTML = MICRO_EXTRAS.map(k => `
+        <div class="micro-item">
+            <label>${k}</label>
+            <input type="number" class="micro-input" data-key="${k}"
+                   value="" min="0" step="0.01" placeholder="0">
+        </div>`).join('');
+
+    return `
+        <div class="micro-grid">
+            ${principalesHTML}
+            <button type="button" class="btn-micro-mas" title="Ver más micronutrientes">
+                + más
+            </button>
+            <div class="micro-extra d-flex flex-wrap gap-1 w-100">
+                ${extrasHTML}
+            </div>
+        </div>
+        <!-- Campo oculto que recibe el JSON generado por JS -->
+        <input type="hidden" name="micronutrientes_objetivo[]" class="micro-hidden" value="">`;
+}
+
 function agregarFilaSemana(num) {
     contadorSemanas++;
     const n = num || contadorSemanas;
+
+    // Fecha estimada: lunes de la semana n desde hoy
+    const hoy = new Date();
+    const lunes = new Date(hoy);
+    lunes.setDate(hoy.getDate() - hoy.getDay() + 1 + (n - 1) * 7);
+    const fechaISO = lunes.toISOString().split('T')[0];
+
     const tr = document.createElement('tr');
     tr.innerHTML = `
-        <td><input type="number" name="semana[]" class="form-control form-control-sm" value="${n}" min="1" max="52" required style="width:65px"></td>
-        <td><input type="date" name="fecha_estimada[]" class="form-control form-control-sm" required></td>
-        <td><input type="number" name="n_objetivo[]" class="form-control form-control-sm text-end" value="0" min="0" step="0.01"></td>
-        <td><input type="number" name="p_objetivo[]" class="form-control form-control-sm text-end" value="0" min="0" step="0.01"></td>
-        <td><input type="number" name="k_objetivo[]" class="form-control form-control-sm text-end" value="0" min="0" step="0.01"></td>
-        <td><input type="text" name="micronutrientes_objetivo[]" class="form-control form-control-sm font-monospace"
-                   placeholder='{"Ca":1.5}' style="font-size:0.78rem;"></td>
-        <td><input type="text" name="observaciones[]" class="form-control form-control-sm" placeholder="Opcional"></td>
+        <td><input type="number" name="semana[]" class="form-control form-control-sm"
+                value="${n}" min="1" max="52" required style="width:65px"></td>
+        <td><input type="date" name="fecha_estimada[]" class="form-control form-control-sm"
+                value="${fechaISO}" required></td>
+        <td><input type="number" name="n_objetivo[]" class="form-control form-control-sm text-end"
+                value="0" min="0" step="0.01"></td>
+        <td><input type="number" name="p_objetivo[]" class="form-control form-control-sm text-end"
+                value="0" min="0" step="0.01"></td>
+        <td><input type="number" name="k_objetivo[]" class="form-control form-control-sm text-end"
+                value="0" min="0" step="0.01"></td>
+        <td>${microCeldaHTML()}</td>
+        <td><input type="text" name="observaciones[]" class="form-control form-control-sm"
+                placeholder="Opcional"></td>
         <td>
-            <button type="button" class="btn btn-sm btn-outline-danger btnEliminarFila">
+            <button type="button" class="btn btn-sm btn-outline-danger btnEliminarFila"
+                    title="Eliminar semana">
                 <i class="bi bi-x"></i>
             </button>
         </td>`;
+
     tbody.appendChild(tr);
+
+    // Evento: sincronizar JSON cuando cambia cualquier micro-input
+    tr.querySelectorAll('.micro-input').forEach(inp => {
+        inp.addEventListener('input', () => syncMicroHidden(tr));
+    });
+
+    // Evento: expandir/colapsar extras
+    const btnMas  = tr.querySelector('.btn-micro-mas');
+    const extras  = tr.querySelector('.micro-extra');
+    btnMas.addEventListener('click', () => {
+        const abierto = extras.classList.toggle('visible');
+        btnMas.textContent = abierto ? '− menos' : '+ más';
+    });
+
+    // Evento: eliminar fila
     tr.querySelector('.btnEliminarFila').addEventListener('click', () => tr.remove());
 }
 
@@ -137,6 +280,11 @@ for (let i = 1; i <= 4; i++) agregarFilaSemana(i);
 document.getElementById('btnAgregarSemana').addEventListener('click', () => {
     const totalFilas = tbody.querySelectorAll('tr').length;
     agregarFilaSemana(totalFilas + 1);
+});
+
+// Antes de enviar: asegurar que todos los hidden estén sincronizados
+document.getElementById('formPrograma').addEventListener('submit', () => {
+    tbody.querySelectorAll('tr').forEach(tr => syncMicroHidden(tr));
 });
 </script>
 
