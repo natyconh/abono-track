@@ -50,8 +50,20 @@ $cp = $_GET['url'] ?? 'home/index';
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo (strpos($cp, 'fertilizacion') === 0 && strpos($cp, 'fertilizacion/reporteNutricional') === false) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/fertilizacion">
+                <a class="nav-link <?php echo ($cp === 'fertilizacion' || $cp === 'fertilizacion/index') ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/fertilizacion">
                     <i class="bi bi-eyedropper"></i> Fertirrigación
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link <?php echo (strpos($cp, 'fertilizacion/historial') === 0) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/fertilizacion/historial">
+                    <i class="bi bi-journal-text"></i> Bitácora
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link <?php echo (strpos($cp, 'fertilizacion/configuracion') === 0) ? 'active' : ''; ?>" href="<?php echo URL_ROOT; ?>/fertilizacion/configuracion">
+                    <i class="bi bi-diagram-3-fill"></i> Config. Hidráulica
                 </a>
             </li>
 

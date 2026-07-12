@@ -1,7 +1,7 @@
 <?php
 /**
  * Controlador Operativo de Fertirrigación — Abono Track
- * Maneja: Registro, Edición y Configuración
+ * Maneja: Registro, Edición, Configuración Hidráulica, Historial y Reportes
  */
 class FertilizacionController extends Controller {
 
@@ -55,6 +55,33 @@ class FertilizacionController extends Controller {
             ],
         ];
         $this->view('fertilizacion/registro', $data);
+    }
+
+    /**
+     * Configuración Hidráulica — distribución porcentual de agua
+     * entre cabezales y predios interconectados.
+     * Ruta: /fertilizacion/configuracion
+     */
+    public function configuracion() {
+        // Todos los predios del usuario con sus distribuciones actuales
+        $predios = $this->predioModel->obtenerTodosConDistribuciones();
+
+        // Solo predios físicos (tipo cultivo) como destino posible en el modal
+        $predios_fisicos = array_filter($predios, function($p) {
+            return $p->tipo_superficie !== 'cabezal_virtual';
+        });
+
+        $data = [
+            'titulo'         => 'Configuración Hidráulica — Abono Track',
+            'predios'        => $predios,
+            'predios_fisicos' => array_values($predios_fisicos),
+            'breadcrumbs'    => [
+                ['label' => 'Fertirrigación', 'url' => URL_ROOT . '/fertilizacion'],
+                ['label' => 'Configuración Hidráulica'],
+            ],
+        ];
+
+        $this->view('fertilizacion/configuracion', $data);
     }
 
     public function guardarRegistro() {
@@ -251,42 +278,43 @@ class FertilizacionController extends Controller {
     }
 
     public function verDetalleDistribucion($cabezalId) {
-        $detalle = $this->fertilizacionService->obtenerDetalleDistribucion($cabezalId);
-        $this->respondJson(['success' => true, 'detalle' => $detalle]);
+        $distribuciones = $this->configRiegoModel->obtenerPorOrigen($cabezalId);
+        $this->respondJson($distribuciones);
     }
 
     public function guardarConfigDistribucion() {
-        if ($_SERVER['REQUEST_METHOD'] != 'POST') $this->redirect('fertilizacion/historial');
-        $cabezal_id  = $_POST['cabezal_id']  ?? null;
-        $porcentajes = $_POST['porcentaje']   ?? [];
-        $predios     = $_POST['predio_id']    ?? [];
-
-        if (empty($cabezal_id)) {
-            $this->respondJson(['success' => false, 'message' => 'Cabezal no especificado.']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->respondJson(['success' => false, 'message' => 'Método no permitido']);
             return;
         }
 
-        $distribuciones = [];
-        foreach ($predios as $i => $pid) {
-            if (!empty($pid) && isset($porcentajes[$i])) {
-                $distribuciones[] = [
-                    'predio_destino_id' => (int)$pid,
-                    'porcentaje'        => (float)$porcentajes[$i],
-                ];
-            }
+        $origen_id      = $_POST['origen_id']      ?? null;
+        $destino_id     = $_POST['destino_id']     ?? null;
+        $porcentaje     = $_POST['porcentaje']     ?? null;
+        $distribuciones = $_POST['distribuciones'] ?? null;
+
+        if ($distribuciones) {
+            $distribuciones = json_decode($distribuciones, true);
         }
 
         $result = $this->configRiegoModel->guardarDistribucion($cabezal_id, $distribuciones);
-        $this->respondJson(['success' => $result]);
+        $this->respondJson($result);
     }
 
     public function eliminarRegistro($id) {
-        if ($_SERVER['REQUEST_METHOD'] != 'POST') $this->redirect('fertilizacion/historial');
-        if ($this->fertilizacionService->eliminarAplicacion($id)) {
+        if (!$id) {
+            SessionHelper::setFlash('ID inválido.', 'danger');
+            $this->redirect('fertilizacion/historial');
+        }
+
+        $resultado = $this->fertilizacionService->eliminarAplicacion($id);
+
+        if ($resultado) {
             SessionHelper::setFlash('Registro eliminado.', 'success');
         } else {
             SessionHelper::setFlash('No se pudo eliminar el registro.', 'danger');
         }
+
         $this->redirect('fertilizacion/historial');
     }
 }
