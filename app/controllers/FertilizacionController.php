@@ -25,6 +25,10 @@ class FertilizacionController extends Controller {
         $this->protect();
     }
 
+    // =========================================================
+    //  VISTAS PRINCIPALES
+    // =========================================================
+
     public function index() {
         $this->cargarFormulario();
     }
@@ -58,24 +62,21 @@ class FertilizacionController extends Controller {
     }
 
     /**
-     * Configuración Hidráulica — distribución porcentual de agua
-     * entre cabezales y predios interconectados.
+     * Configuración Hidráulica — distribución porcentual entre cabezales y predios.
      * Ruta: /fertilizacion/configuracion
      */
     public function configuracion() {
-        // Todos los predios del usuario con sus distribuciones actuales
         $predios = $this->predioModel->obtenerTodosConDistribuciones();
 
-        // Solo predios físicos (tipo cultivo) como destino posible en el modal
         $predios_fisicos = array_filter($predios, function($p) {
             return $p->tipo_superficie !== 'cabezal_virtual';
         });
 
         $data = [
-            'titulo'         => 'Configuración Hidráulica — Abono Track',
-            'predios'        => $predios,
+            'titulo'          => 'Configuración Hidráulica — Abono Track',
+            'predios'         => $predios,
             'predios_fisicos' => array_values($predios_fisicos),
-            'breadcrumbs'    => [
+            'breadcrumbs'     => [
                 ['label' => 'Fertirrigación', 'url' => URL_ROOT . '/fertilizacion'],
                 ['label' => 'Configuración Hidráulica'],
             ],
@@ -83,6 +84,213 @@ class FertilizacionController extends Controller {
 
         $this->view('fertilizacion/configuracion', $data);
     }
+
+    // =========================================================
+    //  AJAX — CONFIGURACIÓN HIDRÁULICA
+    // =========================================================
+
+    /**
+     * Crea un cabezal virtual (predio tipo cabezal_virtual) desde el modal.
+     * POST /fertilizacion/crearCabezalRapido
+     */
+    public function crearCabezalRapido() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->respondJson(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+
+        $nombre = trim($_POST['nombre_cabezal'] ?? '');
+
+        if (empty($nombre)) {
+            $this->respondJson(['success' => false, 'message' => 'El nombre del cabezal es obligatorio.']);
+            return;
+        }
+
+        $datos = [
+            'nombre'              => $nombre,
+            'cultivo_id'          => null,
+            'tipo_superficie'     => 'cabezal_virtual',
+            'superficie_total'    => 0,
+            'año_plantacion'      => null,
+            'tipo_emisor'         => null,
+            'caudal_lt_hora'      => 0,
+            'plantas_por_hectarea'=> 0,
+            'cantidad_plantas'    => 0,
+            'umbral_bajo'         => 75,
+            'umbral_optimo_min'   => 90,
+            'umbral_optimo_max'   => 110,
+            'umbral_exceso'       => 130,
+        ];
+
+        if ($this->predioModel->crearPredio($datos)) {
+            $this->respondJson(['success' => true, 'message' => "Cabezal '{$nombre}' creado correctamente."]);
+        } else {
+            $this->respondJson(['success' => false, 'message' => 'Error al crear el cabezal en la base de datos.']);
+        }
+    }
+
+    /**
+     * Elimina (físicamente) un cabezal virtual si no tiene registros dependientes.
+     * POST /fertilizacion/eliminarCabezalVirtual
+     */
+    public function eliminarCabezalVirtual() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->respondJson(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+
+        $id = intval($_POST['id'] ?? 0);
+
+        if (!$id) {
+            $this->respondJson(['success' => false, 'message' => 'ID inválido.']);
+            return;
+        }
+
+        // Verificar que pertenece al usuario y es cabezal_virtual
+        $predio = $this->predioModel->obtenerPredioPorId($id);
+        if (!$predio || $predio->tipo_superficie !== 'cabezal_virtual') {
+            $this->respondJson(['success' => false, 'message' => 'Cabezal no encontrado o no es virtual.']);
+            return;
+        }
+
+        // Intentar borrado físico; si tiene FK constraints, hacer soft-delete
+        if ($this->predioModel->eliminarFisicamente($id)) {
+            $this->respondJson(['success' => true, 'message' => 'Cabezal eliminado.']);
+        } else {
+            // Fallback: soft-delete (activo = 0)
+            $this->predioModel->eliminarPredio($id);
+            $this->respondJson(['success' => true, 'message' => 'Cabezal ocultado (tenía registros asociados).']);
+        }
+    }
+
+    /**
+     * Devuelve las distribuciones actuales de un predio origen.
+     * GET /fertilizacion/getDistribuciones/{id}
+     */
+    public function getDistribuciones($origenId = null) {
+        if (!$origenId) {
+            $this->respondJson([]);
+            return;
+        }
+        $distribuciones = $this->configRiegoModel->obtenerPorOrigen($origenId);
+        $this->respondJson($distribuciones);
+    }
+
+    /**
+     * Guarda (inserta o actualiza) una relación origen → destino con porcentaje.
+     * POST /fertilizacion/guardarDistribucion
+     */
+    public function guardarDistribucion() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->respondJson(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+
+        $origen_id  = intval($_POST['origen_id']  ?? 0);
+        $destino_id = intval($_POST['destino_id'] ?? 0);
+        $porcentaje = floatval($_POST['porcentaje'] ?? 0);
+
+        if (!$origen_id || !$destino_id || $porcentaje <= 0) {
+            $this->respondJson(['success' => false, 'message' => 'Datos incompletos o inválidos.']);
+            return;
+        }
+
+        if ($origen_id === $destino_id) {
+            $this->respondJson(['success' => false, 'message' => 'El origen y destino no pueden ser el mismo predio.']);
+            return;
+        }
+
+        if ($this->configRiegoModel->guardarRelacion($origen_id, $destino_id, $porcentaje)) {
+            $distribuciones = $this->configRiegoModel->obtenerPorOrigen($origen_id);
+            $this->respondJson(['success' => true, 'distribuciones' => $distribuciones]);
+        } else {
+            $this->respondJson(['success' => false, 'message' => 'Error al guardar la distribución.']);
+        }
+    }
+
+    /**
+     * Elimina una relación de distribución por su ID.
+     * POST /fertilizacion/eliminarDistribucion
+     */
+    public function eliminarDistribucion() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->respondJson(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+
+        $id = intval($_POST['id'] ?? 0);
+
+        if (!$id) {
+            $this->respondJson(['success' => false, 'message' => 'ID inválido.']);
+            return;
+        }
+
+        if ($this->configRiegoModel->eliminarRelacion($id)) {
+            $this->respondJson(['success' => true]);
+        } else {
+            $this->respondJson(['success' => false, 'message' => 'No se pudo eliminar la relación.']);
+        }
+    }
+
+    /**
+     * Calcula la proporción de superficie entre predios seleccionados
+     * para el Asistente Automático.
+     * POST /fertilizacion/calcularProporcionSuperficie
+     */
+    public function calcularProporcionSuperficie() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->respondJson(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+
+        $ids = $_POST['ids'] ?? [];
+        if (empty($ids) || !is_array($ids)) {
+            $this->respondJson(['success' => false, 'message' => 'No se enviaron predios.']);
+            return;
+        }
+
+        $ids = array_map('intval', $ids);
+
+        // Obtener superficie_total de cada predio seleccionado
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $this->db->query(
+            "SELECT id, nombre, superficie_total
+             FROM predios
+             WHERE id IN ({$placeholders})
+               AND usuario_id = ?
+               AND activo = 1"
+        );
+        // Bind posicional manual
+        $stmt = $this->db->getStatement();
+        foreach ($ids as $i => $val) {
+            $stmt->bindValue($i + 1, $val, PDO::PARAM_INT);
+        }
+        $stmt->bindValue(count($ids) + 1, $this->usuario_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $predios = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+        $totalSuperficie = array_sum(array_column((array)$predios, 'superficie_total'));
+
+        if ($totalSuperficie <= 0) {
+            $this->respondJson(['success' => false, 'message' => 'Los predios seleccionados no tienen superficie registrada.']);
+            return;
+        }
+
+        $proporciones = [];
+        foreach ($predios as $p) {
+            $proporciones[] = [
+                'id'          => $p->id,
+                'nombre'      => $p->nombre,
+                'porcentaje'  => round(($p->superficie_total / $totalSuperficie) * 100, 2),
+            ];
+        }
+
+        $this->respondJson(['success' => true, 'proporciones' => $proporciones]);
+    }
+
+    // =========================================================
+    //  REGISTRO DE FERTIRRIGACIÓN
+    // =========================================================
 
     public function guardarRegistro() {
         if ($_SERVER['REQUEST_METHOD'] != 'POST') $this->redirect('fertilizacion/index');
@@ -181,6 +389,10 @@ class FertilizacionController extends Controller {
         }
     }
 
+    // =========================================================
+    //  HISTORIAL Y REPORTES
+    // =========================================================
+
     public function historial() {
         $mes      = $_GET['mes']   ?? date('m');
         $year     = $_GET['year']  ?? date('Y');
@@ -275,30 +487,6 @@ class FertilizacionController extends Controller {
                 $this->respondJson(['success' => false, 'message' => 'Error al generar token.']);
             }
         }
-    }
-
-    public function verDetalleDistribucion($cabezalId) {
-        $distribuciones = $this->configRiegoModel->obtenerPorOrigen($cabezalId);
-        $this->respondJson($distribuciones);
-    }
-
-    public function guardarConfigDistribucion() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->respondJson(['success' => false, 'message' => 'Método no permitido']);
-            return;
-        }
-
-        $origen_id      = $_POST['origen_id']      ?? null;
-        $destino_id     = $_POST['destino_id']     ?? null;
-        $porcentaje     = $_POST['porcentaje']     ?? null;
-        $distribuciones = $_POST['distribuciones'] ?? null;
-
-        if ($distribuciones) {
-            $distribuciones = json_decode($distribuciones, true);
-        }
-
-        $result = $this->configRiegoModel->guardarDistribucion($cabezal_id, $distribuciones);
-        $this->respondJson($result);
     }
 
     public function eliminarRegistro($id) {
