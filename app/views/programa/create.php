@@ -1,5 +1,7 @@
-<?php require_once APP_ROOT . '/views/layout/header.php'; ?>
-<?php require_once APP_ROOT . '/views/layout/sidebar.php'; ?>
+<?php
+// Los breadcrumbs los renderiza header.php automaticamente
+// NO incluir sidebar.php aqui (ya lo incluye header.php)
+?>
 
 <style>
 .micro-grid {
@@ -53,125 +55,97 @@
 .micro-extra.visible { display: flex; flex-wrap: wrap; gap: 4px; }
 </style>
 
-<div class="content-wrapper flex-grow-1 p-4">
+<div class="d-flex align-items-center mb-4">
+    <h1 class="h3 fw-bold mb-0" style="color:#1a6b3c;">Nuevo Programa de Fertilización</h1>
+</div>
 
-    <!-- Breadcrumb -->
-    <?php if (!empty($data['breadcrumbs'])): ?>
-    <nav aria-label="breadcrumb" class="mb-3">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="<?php echo URL_ROOT; ?>/home/index"><i class="bi bi-house-fill"></i></a></li>
-            <?php foreach ($data['breadcrumbs'] as $i => $bc): ?>
-            <li class="breadcrumb-item <?php echo ($i === array_key_last($data['breadcrumbs'])) ? 'active' : ''; ?>">
-                <?php if (!empty($bc['url'])): ?><a href="<?php echo $bc['url']; ?>"><?php endif; ?>
-                <?php echo htmlspecialchars($bc['label']); ?>
-                <?php if (!empty($bc['url'])): ?></a><?php endif; ?>
-            </li>
-            <?php endforeach; ?>
-        </ol>
-    </nav>
-    <?php endif; ?>
+<form method="POST" action="<?php echo URL_ROOT; ?>/programa/store" id="formPrograma">
 
-    <div class="d-flex align-items-center mb-4">
-        <h1 class="h3 fw-bold mb-0" style="color:#1a6b3c;">Nuevo Programa de Fertilización</h1>
+    <!-- Cabecera del programa -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white fw-semibold border-bottom">
+            <i class="bi bi-info-circle text-success"></i> Datos Generales
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Predio <span class="text-danger">*</span></label>
+                    <select name="predio_id" class="form-select" required>
+                        <option value="">— Seleccionar predio —</option>
+                        <?php foreach ($data['predios'] as $p): ?>
+                        <option value="<?php echo $p->id; ?>"><?php echo htmlspecialchars($p->nombre); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Cultivo</label>
+                    <select name="cultivo_id" class="form-select">
+                        <option value="">— Opcional —</option>
+                        <?php foreach ($data['cultivos'] as $c): ?>
+                        <option value="<?php echo $c->id; ?>"><?php echo htmlspecialchars($c->nombre); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Temporada <span class="text-danger">*</span></label>
+                    <input type="text" name="temporada" class="form-control"
+                           value="<?php echo $data['temporada_default']; ?>"
+                           placeholder="ej: 2026" required maxlength="20">
+                    <div class="form-text">Año de inicio de temporada</div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <?php SessionHelper::displayFlash(); ?>
-
-    <form method="POST" action="<?php echo URL_ROOT; ?>/programa/store" id="formPrograma">
-
-        <!-- Cabecera del programa -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white fw-semibold border-bottom">
-                <i class="bi bi-info-circle text-success"></i> Datos Generales
-            </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Predio <span class="text-danger">*</span></label>
-                        <select name="predio_id" class="form-select" required>
-                            <option value="">— Seleccionar predio —</option>
-                            <?php foreach ($data['predios'] as $p): ?>
-                            <option value="<?php echo $p->id; ?>"><?php echo htmlspecialchars($p->nombre); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Cultivo</label>
-                        <select name="cultivo_id" class="form-select">
-                            <option value="">— Opcional —</option>
-                            <?php foreach ($data['cultivos'] as $c): ?>
-                            <option value="<?php echo $c->id; ?>"><?php echo htmlspecialchars($c->nombre); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Temporada <span class="text-danger">*</span></label>
-                        <input type="text" name="temporada" class="form-control"
-                               value="<?php echo $data['temporada_default']; ?>"
-                               placeholder="ej: 2026" required maxlength="20">
-                        <div class="form-text">Año de inicio de temporada</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tabla de semanas -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white d-flex align-items-center justify-content-between">
-                <span class="fw-semibold"><i class="bi bi-table text-success"></i> Semanas del Programa</span>
-                <button type="button" class="btn btn-sm btn-outline-success" id="btnAgregarSemana">
-                    <i class="bi bi-plus-circle"></i> Agregar semana
-                </button>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-sm align-middle mb-0" id="tablaPrograma">
-                        <thead class="table-light">
-                            <tr>
-                                <th style="width:60px">#Sem.</th>
-                                <th>Fecha Estimada</th>
-                                <th class="text-end">N (kg/ha)</th>
-                                <th class="text-end">P (kg/ha)</th>
-                                <th class="text-end">K (kg/ha)</th>
-                                <th>Micronutrientes (kg/ha)</th>
-                                <th>Observaciones</th>
-                                <th style="width:50px"></th>
-                            </tr>
-                        </thead>
-                        <tbody id="semanasTbody">
-                            <!-- Filas generadas por JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-success" id="btnGuardar">
-                <i class="bi bi-check2-circle"></i> Guardar Programa
+    <!-- Tabla de semanas -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white d-flex align-items-center justify-content-between">
+            <span class="fw-semibold"><i class="bi bi-table text-success"></i> Semanas del Programa</span>
+            <button type="button" class="btn btn-sm btn-outline-success" id="btnAgregarSemana">
+                <i class="bi bi-plus-circle"></i> Agregar semana
             </button>
-            <a href="<?php echo URL_ROOT; ?>/programa" class="btn btn-outline-secondary">
-                <i class="bi bi-x-circle"></i> Cancelar
-            </a>
         </div>
-    </form>
-</div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0" id="tablaPrograma">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:60px">#Sem.</th>
+                            <th>Fecha Estimada</th>
+                            <th class="text-end">N (kg/ha)</th>
+                            <th class="text-end">P (kg/ha)</th>
+                            <th class="text-end">K (kg/ha)</th>
+                            <th>Micronutrientes (kg/ha)</th>
+                            <th>Observaciones</th>
+                            <th style="width:50px"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="semanasTbody">
+                        <!-- Filas generadas por JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-success" id="btnGuardar">
+            <i class="bi bi-check2-circle"></i> Guardar Programa
+        </button>
+        <a href="<?php echo URL_ROOT; ?>/programa" class="btn btn-outline-secondary">
+            <i class="bi bi-x-circle"></i> Cancelar
+        </a>
+    </div>
+</form>
 
 <script>
 const tbody = document.getElementById('semanasTbody');
 let contadorSemanas = 0;
 
-// Micronutrientes principales siempre visibles
 const MICRO_PRINCIPALES = ['Ca', 'Mg', 'Fe'];
-// Micronutrientes secundarios (expandibles)
 const MICRO_EXTRAS = ['Zn', 'Mn', 'B', 'Cu', 'Mo'];
-// Todos juntos para serializar
 const MICRO_TODOS = [...MICRO_PRINCIPALES, ...MICRO_EXTRAS];
 
-/**
- * Construye el JSON de micronutrientes desde los inputs de una fila.
- * Solo incluye nutrientes con valor > 0.
- */
 function buildMicroJson(tr) {
     const obj = {};
     MICRO_TODOS.forEach(key => {
@@ -183,17 +157,11 @@ function buildMicroJson(tr) {
     return Object.keys(obj).length > 0 ? JSON.stringify(obj) : '';
 }
 
-/**
- * Actualiza el campo oculto micronutrientes_objetivo[] cuando cambia un input.
- */
 function syncMicroHidden(tr) {
     const hidden = tr.querySelector('.micro-hidden');
     if (hidden) hidden.value = buildMicroJson(tr);
 }
 
-/**
- * Genera el HTML de la celda de micronutrientes.
- */
 function microCeldaHTML() {
     let principalesHTML = MICRO_PRINCIPALES.map(k => `
         <div class="micro-item">
@@ -219,7 +187,6 @@ function microCeldaHTML() {
                 ${extrasHTML}
             </div>
         </div>
-        <!-- Campo oculto que recibe el JSON generado por JS -->
         <input type="hidden" name="micronutrientes_objetivo[]" class="micro-hidden" value="">`;
 }
 
@@ -227,7 +194,6 @@ function agregarFilaSemana(num) {
     contadorSemanas++;
     const n = num || contadorSemanas;
 
-    // Fecha estimada: lunes de la semana n desde hoy
     const hoy = new Date();
     const lunes = new Date(hoy);
     lunes.setDate(hoy.getDate() - hoy.getDay() + 1 + (n - 1) * 7);
@@ -257,24 +223,20 @@ function agregarFilaSemana(num) {
 
     tbody.appendChild(tr);
 
-    // Evento: sincronizar JSON cuando cambia cualquier micro-input
     tr.querySelectorAll('.micro-input').forEach(inp => {
         inp.addEventListener('input', () => syncMicroHidden(tr));
     });
 
-    // Evento: expandir/colapsar extras
-    const btnMas  = tr.querySelector('.btn-micro-mas');
-    const extras  = tr.querySelector('.micro-extra');
+    const btnMas = tr.querySelector('.btn-micro-mas');
+    const extras = tr.querySelector('.micro-extra');
     btnMas.addEventListener('click', () => {
         const abierto = extras.classList.toggle('visible');
         btnMas.textContent = abierto ? '− menos' : '+ más';
     });
 
-    // Evento: eliminar fila
     tr.querySelector('.btnEliminarFila').addEventListener('click', () => tr.remove());
 }
 
-// Generar 4 semanas por defecto al cargar
 for (let i = 1; i <= 4; i++) agregarFilaSemana(i);
 
 document.getElementById('btnAgregarSemana').addEventListener('click', () => {
@@ -282,10 +244,7 @@ document.getElementById('btnAgregarSemana').addEventListener('click', () => {
     agregarFilaSemana(totalFilas + 1);
 });
 
-// Antes de enviar: asegurar que todos los hidden estén sincronizados
 document.getElementById('formPrograma').addEventListener('submit', () => {
     tbody.querySelectorAll('tr').forEach(tr => syncMicroHidden(tr));
 });
 </script>
-
-<?php require_once APP_ROOT . '/views/layout/footer.php'; ?>

@@ -39,6 +39,7 @@ class ProgramaFertilizacionModel {
 
     /**
      * Inserta múltiples semanas de un programa en una sola transacción.
+     * Usa la API nativa de Database (beginTransaction / commit / rollBack).
      */
     public function crearMasivo(array $filas): bool {
         $sql = "INSERT INTO programa_fertilizacion
@@ -50,7 +51,7 @@ class ProgramaFertilizacionModel {
                      :fecha_estimada, :n_objetivo, :p_objetivo, :k_objetivo,
                      :micronutrientes_objetivo, :observaciones)";
 
-        $this->db->getConnection()->beginTransaction();
+        $this->db->beginTransaction();
         try {
             foreach ($filas as $f) {
                 $this->db->query($sql);
@@ -67,10 +68,10 @@ class ProgramaFertilizacionModel {
                 $this->db->bind(':observaciones',            $f['observaciones']);
                 $this->db->execute();
             }
-            $this->db->getConnection()->commit();
+            $this->db->commit();
             return true;
         } catch (Exception $e) {
-            $this->db->getConnection()->rollBack();
+            $this->db->rollBack();
             throw $e;
         }
     }
@@ -125,10 +126,8 @@ class ProgramaFertilizacionModel {
 
     /**
      * Obtiene objetivos N/P/K acumulados por predio para una temporada.
+     * Solo semanas con fecha_estimada <= HOY (lo ya "esperado" hasta hoy).
      * Usado por el reporte nutricional para mostrar alertas de atraso.
-     *
-     * Devuelve array de objetos con: predio_id, n_objetivo, p_objetivo, k_objetivo
-     * Solo incluye semanas con fecha_estimada <= HOY (lo ya "esperado" hasta hoy).
      */
     public function obtenerObjetivosAcumuladosPorPredio(string $temporada): array {
         $sql = "SELECT
