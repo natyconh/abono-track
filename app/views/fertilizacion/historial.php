@@ -1,52 +1,88 @@
 <div class="container-fluid mt-4">
-    
+
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="mb-0 text-primary-dark-green fw-bold"><?php echo $data['titulo']; ?></h3>
         <div>
-            <a href="<?php echo URL_ROOT; ?>/fertilizacion/index" class="btn btn-accent-calendula shadow-sm">
-                <i class="bi bi-plus-circle me-2"></i> Registrar Nuevo
-            </a>
+            <h3 class="mb-0 fw-bold" style="color: var(--vertical-agro);"><?php echo $data['titulo']; ?></h3>
+            <nav aria-label="breadcrumb" class="mt-1">
+                <ol class="breadcrumb mb-0 small">
+                    <li class="breadcrumb-item"><a href="<?php echo URL_ROOT; ?>/home" class="text-muted text-decoration-none"><i class="bi bi-house-door"></i></a></li>
+                    <li class="breadcrumb-item"><a href="<?php echo URL_ROOT; ?>/fertilizacion" class="text-muted text-decoration-none">Fertirrigación</a></li>
+                    <li class="breadcrumb-item active text-muted">Historial</li>
+                </ol>
+            </nav>
         </div>
+        <a href="<?php echo URL_ROOT; ?>/fertilizacion/index" class="btn btn-accent-calendula shadow-sm">
+            <i class="bi bi-plus-circle me-2"></i> Registrar Nuevo
+        </a>
     </div>
 
     <?php SessionHelper::displayFlash(); ?>
 
-    <!-- Resumen mensual -->
-    <div class="accordion mb-4 shadow-sm" id="accordionResumen">
-        <div class="accordion-item border-0">
-            <h2 class="accordion-header">
-                <button class="accordion-button collapsed bg-light text-primary-dark-green" type="button" data-bs-toggle="collapse" data-bs-target="#collapseResumen">
-                    <i class="bi bi-calculator me-2"></i> Resumen de Insumos del Mes
-                </button>
-            </h2>
-            <div id="collapseResumen" class="accordion-collapse collapse" data-bs-parent="#accordionResumen">
-                <div class="accordion-body bg-white">
-                    <?php if (empty($data['resumen'])): ?>
-                        <div class="text-muted text-center">Sin datos para resumir.</div>
-                    <?php else: ?>
-                        <div class="table-responsive">
-                            <table class="table table-sm table-bordered mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Cabezal de Inyección</th>
-                                        <th>Producto</th>
-                                        <th class="text-end">Total Aplicado</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($data['resumen'] as $res): ?>
-                                    <tr>
-                                        <td class="fw-bold text-secondary"><?php echo $res->nombre_cabezal; ?></td>
-                                        <td><?php echo $res->nombre_comercial; ?></td>
-                                        <td class="text-end font-monospace text-primary">
-                                            <?php echo number_format($res->total_cantidad, 2, ',', '.') . ' ' . $res->tipo_unidad; ?>
-                                        </td>
-                                    </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    <?php endif; ?>
+    <?php
+        // Preparar datos para el resumen del período en JS
+        $mes  = $data['mes_actual'];
+        $year = $data['year_actual'];
+
+        // Nombre del mes en español para el selector
+        $meses_es = ['enero','febrero','marzo','abril','mayo','junio',
+                     'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+        $nombre_mes_actual = ucfirst($meses_es[(int)$mes - 1]) . ' ' . $year;
+
+        // Codificar los registros en JSON para el resumen JS-side
+        $registros_json = json_encode(array_map(function($r) {
+            return [
+                'fecha'          => $r->fecha,
+                'nombre_cabezal' => $r->nombre_cabezal,
+                'nombre_comercial'=> $r->nombre_comercial,
+                'cantidad'       => (float)$r->cantidad_aplicada,
+                'tipo_unidad'    => $r->tipo_unidad,
+            ];
+        }, $data['registros'] ?? []));
+    ?>
+
+    <!-- Resumen del Período -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2 py-3">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-calculator-fill" style="color: var(--vertical-agro); font-size: 1.1rem;"></i>
+                <span class="fw-bold" style="font-size: 1rem;">Resumen del Período</span>
+            </div>
+            <!-- Selector de tipo de período -->
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <div class="btn-group btn-group-sm" role="group" id="selectorPeriodo">
+                    <button type="button" class="btn btn-outline-secondary active" data-periodo="mes">
+                        <i class="bi bi-calendar-month me-1"></i>Mes
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-periodo="semana">
+                        <i class="bi bi-calendar-week me-1"></i>Semana
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-periodo="temporada">
+                        <i class="bi bi-calendar-range me-1"></i>Temporada
+                    </button>
+                </div>
+                <span class="badge rounded-pill text-bg-light border fw-normal" id="labelPeriodo"><?php echo $nombre_mes_actual; ?></span>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div id="resumenContenido">
+                <!-- Se rellena por JS -->
+                <div class="text-center py-4 text-muted small" id="resumenEmpty" style="display:none;">
+                    <i class="bi bi-inbox fs-3 d-block mb-1 opacity-25"></i>
+                    Sin aplicaciones en este período.
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0" id="tablaResumen">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Cabezal de Inyección</th>
+                                <th>Producto</th>
+                                <th class="text-end pe-3">Total Aplicado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resumenBody">
+                            <tr><td colspan="3" class="text-center py-3 text-muted small">Cargando…</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -55,22 +91,18 @@
     <!-- Filtro de Mes -->
     <div class="card shadow-sm mb-4 border-0">
         <div class="card-body py-2 d-flex justify-content-between align-items-center">
-            <?php 
-                $mes  = $data['mes_actual'];
-                $year = $data['year_actual'];
+            <?php
                 $prevMonth = date('m', mktime(0,0,0,$mes-1,1,$year));
                 $prevYear  = date('Y', mktime(0,0,0,$mes-1,1,$year));
                 $nextMonth = date('m', mktime(0,0,0,$mes+1,1,$year));
                 $nextYear  = date('Y', mktime(0,0,0,$mes+1,1,$year));
-                setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'esp');
-                $nombreMes = strftime('%B', mktime(0,0,0,$mes,10));
             ?>
             <a href="?mes=<?php echo $prevMonth; ?>&year=<?php echo $prevYear; ?>" class="btn btn-outline-secondary btn-sm border-0">
                 <i class="bi bi-chevron-left"></i> Anterior
             </a>
             <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-calendar-month text-muted"></i>
-                <span class="fw-bold text-capitalize fs-5"><?php echo $nombreMes . ' ' . $year; ?></span>
+                <span class="fw-bold text-capitalize fs-5"><?php echo $nombre_mes_actual; ?></span>
             </div>
             <a href="?mes=<?php echo $nextMonth; ?>&year=<?php echo $nextYear; ?>" class="btn btn-outline-secondary btn-sm border-0">
                 Siguiente <i class="bi bi-chevron-right"></i>
@@ -93,7 +125,9 @@
                             <?php
                                 $baseLink = "?mes={$data['mes_actual']}&year={$data['year_actual']}";
                                 $newDir = ($data['dir'] == 'ASC') ? 'DESC' : 'ASC';
-                                $icon = ($data['dir'] == 'ASC') ? '<i class="bi bi-arrow-up-short"></i>' : '<i class="bi bi-arrow-down-short"></i>';
+                                $icon   = ($data['dir'] == 'ASC')
+                                    ? '<i class="bi bi-arrow-up-short"></i>'
+                                    : '<i class="bi bi-arrow-down-short"></i>';
                             ?>
                             <th class="ps-4 py-3">
                                 <a href="<?php echo $baseLink; ?>&sort=fecha&dir=<?php echo $newDir; ?>" class="text-decoration-none text-secondary">
@@ -112,7 +146,7 @@
                             </th>
                             <th class="text-end py-3">Cantidad Total</th>
                             <th class="text-center py-3">Registrado por</th>
-                            <th class="text-end pe-4 py-3" style="min-width:140px;">Acciones</th>
+                            <th class="text-end pe-4 py-3" style="min-width:100px;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -126,9 +160,9 @@
                         <?php else: ?>
                             <?php foreach ($data['registros'] as $reg):
                                 $badgeClass = 'bg-secondary'; $icon = 'bi-box-seam';
-                                if ($reg->tipo_producto == 'fertilizante')  { $badgeClass = 'bg-success';            $icon = 'bi-flower1'; }
-                                if ($reg->tipo_producto == 'biostimulante') { $badgeClass = 'bg-info text-dark';     $icon = 'bi-stars'; }
-                                if ($reg->tipo_producto == 'enmienda')      { $badgeClass = 'bg-warning text-dark';  $icon = 'bi-layers'; }
+                                if ($reg->tipo_producto == 'fertilizante')  { $badgeClass = 'bg-success';           $icon = 'bi-flower1'; }
+                                if ($reg->tipo_producto == 'biostimulante') { $badgeClass = 'bg-info text-dark';    $icon = 'bi-stars'; }
+                                if ($reg->tipo_producto == 'enmienda')      { $badgeClass = 'bg-warning text-dark'; $icon = 'bi-layers'; }
                             ?>
                             <tr>
                                 <td class="ps-4 fw-bold text-secondary"><?php echo date('d/m/Y', strtotime($reg->fecha)); ?></td>
@@ -138,21 +172,16 @@
                                     <?php echo htmlspecialchars($reg->nombre_comercial); ?>
                                 </td>
                                 <td class="text-end fw-bold font-monospace">
-                                    <?php echo number_format($reg->cantidad_aplicada, 2, ',', '.'); ?> 
+                                    <?php echo number_format($reg->cantidad_aplicada, 2, ',', '.'); ?>
                                     <small class="text-muted"><?php echo $reg->tipo_unidad; ?></small>
                                 </td>
                                 <td class="text-center text-muted small"><?php echo htmlspecialchars($reg->nombre_usuario ?? '-'); ?></td>
                                 <td class="text-end pe-4">
-                                    <div class="btn-group">
-                                        <button class="btn btn-sm btn-outline-secondary border-0" title="Ver Distribución"
-                                                onclick="verDistribucion(<?php echo $reg->id; ?>, '<?php echo htmlspecialchars($reg->nombre_comercial); ?>', '<?php echo htmlspecialchars($reg->nombre_cabezal); ?>')"> 
-                                            <i class="bi bi-eye-fill"></i>
-                                        </button>
-                                        <a href="<?php echo URL_ROOT; ?>/fertilizacion/editar/<?php echo $reg->id; ?>" 
-                                           class="btn btn-sm btn-outline-primary border-0" title="Editar Registro">
-                                            <i class="bi bi-pencil-fill"></i>
-                                        </a>
-                                    </div>
+                                    <!-- Botón editar únicamente (botón ojo eliminado: endpoint no existe) -->
+                                    <a href="<?php echo URL_ROOT; ?>/fertilizacion/editar/<?php echo $reg->id; ?>"
+                                       class="btn btn-sm btn-outline-primary border-0" title="Editar Registro">
+                                        <i class="bi bi-pencil-fill"></i>
+                                    </a>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -164,86 +193,114 @@
     </div>
 </div>
 
-<!-- Modal Detalle Distribución -->
-<div class="modal fade" id="modalDistribucion" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary-dark-green text-white">
-                <h5 class="modal-title"><i class="bi bi-share-fill me-2"></i>Distribución Real</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3 pb-2 border-bottom">
-                    <h6 class="fw-bold mb-1" id="modalProducto"></h6>
-                    <small class="text-muted">Inyectado en: <span id="modalCabezal"></span></small>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-sm table-striped mb-0">
-                        <thead class="small text-muted">
-                            <tr>
-                                <th>Destino (Sector/Lote)</th>
-                                <th class="text-end">Cant. Recibida</th>
-                                <th class="text-end">N — P — K</th>
-                                <th class="text-end">Micronutrientes</th>
-                            </tr>
-                        </thead>
-                        <tbody id="modalTablaBody">
-                            <tr><td colspan="4" class="text-center"><div class="spinner-border spinner-border-sm text-primary"></div></td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="alert alert-info mt-3 mb-0 py-2 small">
-                    <i class="bi bi-info-circle me-1"></i>
-                    Calculado en base a la configuración hidráulica y densidad del producto.
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
-function verDistribucion(cabezalId, producto, cabezal) {
-    document.getElementById('modalProducto').textContent = producto;
-    document.getElementById('modalCabezal').textContent  = cabezal;
-    const modal = new bootstrap.Modal(document.getElementById('modalDistribucion'));
-    modal.show();
-    const tbody = document.getElementById('modalTablaBody');
-    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-3"><div class="spinner-border text-primary"></div></td></tr>';
+(function () {
+    // Registros ya cargados desde PHP — no se hace fetch adicional
+    var registros = <?php echo $registros_json; ?>;
+    var mesActual = <?php echo (int)$mes; ?>;
+    var yearActual = <?php echo (int)$year; ?>;
 
-    fetch('<?php echo URL_ROOT; ?>/fertilizacion/verDetalleDistribucion/' + cabezalId)
-        .then(r => r.json())
-        .then(data => {
-            tbody.innerHTML = '';
-            if (data.success && data.detalle.length > 0) {
-                data.detalle.forEach(d => {
-                    // NPK
-                    let npk = '-';
-                    if (parseFloat(d.unidades_n) > 0 || parseFloat(d.unidades_p) > 0 || parseFloat(d.unidades_k) > 0) {
-                        npk = `<span class="text-success">${parseFloat(d.unidades_n).toFixed(2)}</span> — 
-                               <span style="color:#d39e00">${parseFloat(d.unidades_p).toFixed(2)}</span> — 
-                               <span class="text-danger">${parseFloat(d.unidades_k).toFixed(2)}</span>`;
-                    }
-                    // Micronutrientes
-                    let micros = '<span class="text-muted opacity-50">—</span>';
-                    const md = d.micronutrientes_decoded;
-                    if (md && typeof md === 'object' && Object.keys(md).length > 0) {
-                        micros = Object.entries(md)
-                            .map(([k,v]) => `<span class="badge bg-secondary me-1">${k}: ${parseFloat(v).toFixed(2)}</span>`)
-                            .join('');
-                    }
-                    tbody.innerHTML += `<tr>
-                        <td>${d.nombre_sector_destino}</td>
-                        <td class="text-end fw-bold">${parseFloat(d.cantidad_recibida).toFixed(2)}</td>
-                        <td class="text-end small font-monospace">${npk}</td>
-                        <td class="text-end small">${micros}</td>
-                    </tr>`;
-                });
-            } else {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Sin distribución registrada.</td></tr>';
+    // Período activo: 'mes' | 'semana' | 'temporada'
+    var periodoActivo = 'mes';
+
+    var labelPeriodo = document.getElementById('labelPeriodo');
+    var resumenBody  = document.getElementById('resumenBody');
+    var resumenEmpty = document.getElementById('resumenEmpty');
+    var tablaResumen = document.getElementById('tablaResumen');
+
+    // Determinar inicio de temporada: septiembre del año anterior si mes < 9
+    function inicioTemporada() {
+        return mesActual >= 9 ? yearActual + '-09-01' : (yearActual - 1) + '-09-01';
+    }
+
+    // Lunes de la semana de hoy
+    function inicioSemanaActual() {
+        var hoy = new Date();
+        var dia = hoy.getDay() || 7; // domingo = 7
+        var lunes = new Date(hoy);
+        lunes.setDate(hoy.getDate() - (dia - 1));
+        return lunes.toISOString().slice(0, 10);
+    }
+
+    function filtrarRegistros(periodo) {
+        if (!registros || registros.length === 0) return [];
+        if (periodo === 'mes') {
+            // Todos los del mes ya cargados = todos los registros
+            return registros;
+        } else if (periodo === 'semana') {
+            var lunes = inicioSemanaActual();
+            var hoy   = new Date().toISOString().slice(0, 10);
+            return registros.filter(function(r) {
+                return r.fecha >= lunes && r.fecha <= hoy;
+            });
+        } else if (periodo === 'temporada') {
+            var inicio = inicioTemporada();
+            return registros.filter(function(r) { return r.fecha >= inicio; });
+        }
+        return registros;
+    }
+
+    function agruparResumen(lista) {
+        var mapa = {};
+        lista.forEach(function(r) {
+            var key = r.nombre_cabezal + '||' + r.nombre_comercial + '||' + r.tipo_unidad;
+            if (!mapa[key]) {
+                mapa[key] = { cabezal: r.nombre_cabezal, producto: r.nombre_comercial, unidad: r.tipo_unidad, total: 0 };
             }
-        })
-        .catch(() => {
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error al cargar detalles.</td></tr>';
+            mapa[key].total += r.cantidad;
         });
-}
+        return Object.values(mapa);
+    }
+
+    function formatNum(n) {
+        return n.toFixed(2).replace('.', ',');
+    }
+
+    function renderResumen(periodo) {
+        var lista = filtrarRegistros(periodo);
+        var agrupado = agruparResumen(lista);
+
+        if (agrupado.length === 0) {
+            tablaResumen.style.display = 'none';
+            resumenEmpty.style.display = '';
+        } else {
+            tablaResumen.style.display = '';
+            resumenEmpty.style.display = 'none';
+            resumenBody.innerHTML = agrupado.map(function(row) {
+                return '<tr>' +
+                    '<td class="ps-3 fw-semibold text-secondary">' + row.cabezal + '</td>' +
+                    '<td>' + row.producto + '</td>' +
+                    '<td class="text-end pe-3 font-monospace" style="color:var(--vertical-agro);">' +
+                        formatNum(row.total) + ' <small class="text-muted">' + row.unidad + '</small>' +
+                    '</td>' +
+                    '</tr>';
+            }).join('');
+        }
+
+        // Actualizar label del período
+        var meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+        if (periodo === 'mes') {
+            labelPeriodo.textContent = meses[mesActual - 1].charAt(0).toUpperCase() + meses[mesActual - 1].slice(1) + ' ' + yearActual;
+        } else if (periodo === 'semana') {
+            labelPeriodo.textContent = 'Semana actual';
+        } else {
+            var ini = inicioTemporada();
+            var finYear = mesActual >= 9 ? yearActual + 1 : yearActual;
+            labelPeriodo.textContent = 'Temporada ' + ini.slice(0, 4) + '/' + finYear;
+        }
+    }
+
+    // Botones del selector
+    document.querySelectorAll('#selectorPeriodo button').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('#selectorPeriodo button').forEach(function(b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            periodoActivo = btn.dataset.periodo;
+            renderResumen(periodoActivo);
+        });
+    });
+
+    // Render inicial
+    renderResumen('mes');
+})();
 </script>
