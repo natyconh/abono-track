@@ -26,11 +26,11 @@ $fecha_es = $dias[date('w')] . ', ' . date('j') . ' de ' . $meses[(int)date('n')
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body p-3">
                 <div class="d-flex justify-content-between align-items-start mb-2">
-                    <span class="text-muted small">Aplicaciones hoy</span>
+                    <span class="text-muted small">Aplicaciones realizadas hoy</span>
                     <span class="badge bg-info-soft text-info"><i class="bi bi-eyedropper"></i></span>
                 </div>
                 <div class="fs-3 fw-bold text-dark"><?php echo htmlspecialchars($data['aplicaciones_hoy'] ?? '0'); ?></div>
-                <div class="text-muted" style="font-size:0.75rem;">registradas hoy</div>
+                <div class="text-muted" style="font-size:0.75rem;">Hoy día</div>
             </div>
         </div>
     </div>
@@ -40,7 +40,7 @@ $fecha_es = $dias[date('w')] . ', ' . date('j') . ' de ' . $meses[(int)date('n')
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body p-3">
                 <div class="d-flex justify-content-between align-items-start mb-2">
-                    <span class="text-muted small">Esta semana</span>
+                    <span class="text-muted small">Aplicaciones realizadas esta semana</span>
                     <span class="badge bg-primary-soft text-primary-agro"><i class="bi bi-calendar-week"></i></span>
                 </div>
                 <div class="fs-3 fw-bold text-dark"><?php echo htmlspecialchars($data['aplicaciones_semana'] ?? '0'); ?></div>
@@ -49,19 +49,6 @@ $fecha_es = $dias[date('w')] . ', ' . date('j') . ' de ' . $meses[(int)date('n')
         </div>
     </div>
 
-    <!-- Predios activos -->
-    <div class="col-6 col-md-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body p-3">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <span class="text-muted small">Predios activos</span>
-                    <span class="badge bg-success-soft text-success"><i class="bi bi-map"></i></span>
-                </div>
-                <div class="fs-3 fw-bold text-dark"><?php echo htmlspecialchars($data['total_predios'] ?? '--'); ?></div>
-                <div class="text-muted" style="font-size:0.75rem;">registrados en el sistema</div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <!-- Panel de estado de programas por predio -->
