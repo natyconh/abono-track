@@ -1,5 +1,5 @@
 <?php
-// _legacy/abono-track/app/views/layout/footer.php
+// app/views/layout/footer.php
 ?>
 </main> <!-- Fin del contenedor principal -->
     </div> <!-- Fin del d-flex -->
@@ -40,5 +40,62 @@
     <?php endif; ?>
 
     <script src="<?php echo URL_ROOT; ?>/js/main.js"></script>
+
+    <!-- =====================================================
+         FIX SIDEBAR MÓVIL — soporte Android (touchend)
+         ===================================================== -->
+    <script>
+    (function () {
+        var toggle  = document.getElementById('sidebarToggle');
+        var sidebar = document.getElementById('sidebar');
+        var overlay = document.getElementById('overlay');
+
+        if (!toggle || !sidebar || !overlay) return;
+
+        function abrirSidebar() {
+            sidebar.classList.add('active');
+            overlay.classList.remove('d-none');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function cerrarSidebar() {
+            sidebar.classList.remove('active');
+            overlay.classList.add('d-none');
+            document.body.style.overflow = '';
+        }
+
+        function toggleSidebar() {
+            sidebar.classList.contains('active') ? cerrarSidebar() : abrirSidebar();
+        }
+
+        // Evento click estándar
+        toggle.addEventListener('click', function (e) {
+            e.stopPropagation();
+            toggleSidebar();
+        });
+
+        // touchend para Android (donde click puede no dispararse sobre el toggler)
+        toggle.addEventListener('touchend', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleSidebar();
+        });
+
+        // Cerrar al tocar el overlay
+        overlay.addEventListener('click', cerrarSidebar);
+        overlay.addEventListener('touchend', function (e) {
+            e.preventDefault();
+            cerrarSidebar();
+        });
+
+        // Cerrar sidebar al navegar a cualquier enlace dentro de él
+        sidebar.querySelectorAll('a.nav-link').forEach(function (link) {
+            link.addEventListener('click', function () {
+                if (window.innerWidth < 992) cerrarSidebar();
+            });
+        });
+    })();
+    </script>
+
 </body>
 </html>
