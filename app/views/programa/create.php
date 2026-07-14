@@ -1,8 +1,3 @@
-<?php
-// Los breadcrumbs los renderiza header.php automaticamente
-// NO incluir sidebar.php aqui (ya lo incluye header.php)
-?>
-
 <style>
 .micro-grid {
     display: flex;

@@ -1,8 +1,3 @@
-<?php
-// Los breadcrumbs los renderiza header.php automaticamente
-// NO incluir sidebar.php aqui (ya lo incluye header.php)
-?>
-
 <div class="d-flex align-items-center justify-content-between mb-4">
     <div>
         <h1 class="h3 fw-bold mb-0" style="color:#1a6b3c;">Programa vs. Aplicado</h1>

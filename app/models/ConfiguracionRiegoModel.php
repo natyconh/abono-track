@@ -1,8 +1,6 @@
 <?php
 /**
- * Modelo para la Configuración de Distribución Hidráulica
- * ADAPTADO para Abono Track: sin multi-empresa, filtro por usuario_id.
- * MODIFICADO: guardarRelacion permite UPDATES para facilitar el asistente.
+ * Modelo para la Configuración de Distribución Hidráulica de Abono Track
  */
 class ConfiguracionRiegoModel {
     private $db;

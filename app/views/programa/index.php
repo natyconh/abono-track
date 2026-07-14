@@ -1,7 +1,3 @@
-<?php
-// Breadcrumb y sidebar los maneja header.php
-?>
-
 <!-- Cabecera -->
 <div class="d-flex align-items-center justify-content-between mb-4">
     <div>

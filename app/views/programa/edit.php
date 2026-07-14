@@ -1,5 +1,4 @@
 <?php
-// Breadcrumb y sidebar los maneja header.php
 
 // Serializar las semanas existentes a JSON para el JS
 $semanasJS = [];

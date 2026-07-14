@@ -1,7 +1,6 @@
 <?php
 /**
- * Modelo para el Catálogo de Cultivos (Tabla 'cultivos')
- * ADAPTADO para Abono Track: sin multi-empresa, filtro por usuario_id.
+ * Modelo para el Catálogo de Cultivos (Tabla 'cultivos') de Abono Track.
  */
 class CultivoModel {
     private $db;

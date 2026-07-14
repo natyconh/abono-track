@@ -1,8 +1,7 @@
 <?php
 /**
  * Modelo para el Catálogo de Fertilizantes e Insumos
- * (NPK + Micronutrientes JSON)
- * ADAPTADO para Abono Track: sin multi-empresa, filtro por usuario_id.
+ * (NPK + Micronutrientes JSON) de para Abono Track.
  */
 class FertilizanteModel {
     private $db;

@@ -1,7 +1,7 @@
 <?php
 /**
  * Modelo para obtener datos de Predios (tabla 'predios')
- * ADAPTADO para Abono Track: sin multi-empresa, filtro por usuario_id.
+ * De Abono Track.
  * Soporte para Umbrales de Riego.
  */
 class PredioModel {

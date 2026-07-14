@@ -201,8 +201,6 @@ class FertilizacionService {
      *   capturar aplicaciones registradas ligeramente fuera del rango exacto.
      * - Cada aplicación se asigna a la semana cuya ventana
      *   [fecha_estimada_semana_i .. fecha_estimada_semana_{i+1} - 1 día] la contiene.
-     * - Se elimina la dependencia de WEEK(fecha,1) que causaba desfases entre
-     *   la semana ISO del año y la semana lógica de la temporada agrícola.
      *
      * Retorna array con filas por semana: objetivo N/P/K, aplicado N/P/K, desviación %.
      */

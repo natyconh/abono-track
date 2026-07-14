@@ -1,6 +1,6 @@
 <?php
 // _legacy/abono-track/app/views/fertilizantes/form.php
-// Formulario crear/editar producto fertilizante — igual al de Ryzoma, sin empresa_id
+// Formulario crear/editar producto fertilizante 
 ?>
 <div class="container-fluid mt-4">
     <div class="row justify-content-center">
